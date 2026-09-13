@@ -625,24 +625,24 @@ button:focus-visible {
 .lutador {
   position: absolute;
   bottom: 6%;
-  width: min(240px, 48vw);
+  width: min(158px, 32vw);
   z-index: 2;
   transform-origin: center bottom;
   overflow: visible;
 }
 
 .lutador--nara {
-  left: 6%;
+  left: 1%;
   --dir: 1;
 }
 
 .lutador--inimigo {
-  right: 6%;
+  right: 1%;
   --dir: -1;
 }
 
 .lutador--inimigo.is-chefe {
-  width: min(280px, 56vw);
+  width: min(176px, 36vw);
 }
 
 .lutador__svg, .lutador__sprite {
@@ -1195,6 +1195,11 @@ button:focus-visible {
     padding-right: calc(12px + var(--safe-r));
   }
 
+  .lutador { width: min(122px, 30vw); }
+  .lutador--nara { left: 0; }
+  .lutador--inimigo { right: 0; }
+  .lutador--inimigo.is-chefe { width: min(136px, 33vw); }
+
   .lutador--nara .flutuantes {
     left: 78%;
   }
@@ -1327,8 +1332,10 @@ button:focus-visible {
 
 @media (min-width: 860px) {
   .arena { min-height: 320px; }
-  .lutador { width: 180px; }
-  .lutador--inimigo.is-chefe { width: 210px; }
+  .lutador { width: 200px; }
+  .lutador--nara { left: 6%; }
+  .lutador--inimigo { right: 6%; }
+  .lutador--inimigo.is-chefe { width: 230px; }
   .acoes { gap: 14px; }
   .acao { min-height: 88px; }
   .melhorias { grid-template-columns: 1fr; }
