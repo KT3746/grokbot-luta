@@ -2,7 +2,7 @@
 (() => {
   "use strict";
 
-  const VERSAO = "1.5.3";
+  const VERSAO = "1.5.4";
   const CHAVE = "duelo-rapido";
   const TOTAL_CIRCULOS = 10;
 
@@ -228,16 +228,16 @@
   const CAMPANHA = ["liro", "dagro", "velin", "bruma", "korr", "sile", "ravo", "neme", "orvane", "aurenegra"];
 
   const ARTES = {
-    liro: `<img class="lutador__sprite" src="img/liro.webp?v=1.5.3" alt="">`,
-    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=1.5.3" alt="">`,
-    velin: `<img class="lutador__sprite" src="img/velin.webp?v=1.5.3" alt="">`,
-    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=1.5.3" alt="">`,
-    korr: `<img class="lutador__sprite" src="img/korr.webp?v=1.5.3" alt="">`,
-    sile: `<img class="lutador__sprite" src="img/sile.webp?v=1.5.3" alt="">`,
-    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=1.5.3" alt="">`,
-    neme: `<img class="lutador__sprite" src="img/neme.webp?v=1.5.3" alt="">`,
-    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=1.5.3" alt="">`,
-    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=1.5.3" alt="">`,
+    liro: `<img class="lutador__sprite" src="img/liro.webp?v=1.5.4" alt="">`,
+    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=1.5.4" alt="">`,
+    velin: `<img class="lutador__sprite" src="img/velin.webp?v=1.5.4" alt="">`,
+    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=1.5.4" alt="">`,
+    korr: `<img class="lutador__sprite" src="img/korr.webp?v=1.5.4" alt="">`,
+    sile: `<img class="lutador__sprite" src="img/sile.webp?v=1.5.4" alt="">`,
+    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=1.5.4" alt="">`,
+    neme: `<img class="lutador__sprite" src="img/neme.webp?v=1.5.4" alt="">`,
+    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=1.5.4" alt="">`,
+    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=1.5.4" alt="">`,
   };
 
   const MELHORIAS = [
@@ -591,8 +591,21 @@
     if (!Ctx) return null;
     const ctx = new Ctx();
     const master = ctx.createGain();
-    master.gain.value = 0.85;
-    master.connect(ctx.destination);
+    master.gain.value = 0.72;
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -18;
+    comp.knee.value = 18;
+    comp.ratio.value = 6;
+    comp.attack.value = 0.004;
+    comp.release.value = 0.16;
+    master.connect(comp);
+    comp.connect(ctx.destination);
+
+    const ruidoBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+    const ruidoData = ruidoBuf.getChannelData(0);
+    for (let i = 0; i < ruidoData.length; i++) {
+      ruidoData[i] = (Math.random() * 2 - 1) * (1 - i / ruidoData.length);
+    }
 
     function agora() {
       return ctx.currentTime;
@@ -602,62 +615,50 @@
       const g = gainNode.gain;
       g.cancelScheduledValues(t0);
       g.setValueAtTime(0.0001, t0);
-      g.linearRampToValueAtTime(peak, t0 + a);
-      g.linearRampToValueAtTime(peak * s, t0 + a + d);
+      g.exponentialRampToValueAtTime(Math.max(0.0002, peak), t0 + Math.max(0.008, a));
+      g.exponentialRampToValueAtTime(Math.max(0.0002, peak * s), t0 + a + d);
       g.exponentialRampToValueAtTime(0.0001, t0 + a + d + r);
     }
 
-    function osc(tipo, freq, t0, dur, peak, detune) {
-      if (estado.mudo || ctx.state === "closed") return null;
-      const o = ctx.createOscillator();
+    function out() {
       const g = ctx.createGain();
+      g.connect(master);
+      return g;
+    }
+
+    function tone(tipo, freq, t0, dur, peak, slide) {
+      if (estado.mudo || ctx.state === "closed") return;
+      const o = ctx.createOscillator();
+      const g = out();
       o.type = tipo;
       o.frequency.setValueAtTime(freq, t0);
-      if (detune) o.detune.setValueAtTime(detune, t0);
-      g.gain.setValueAtTime(0.0001, t0);
+      if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, slide), t0 + dur);
       o.connect(g);
-      g.connect(master);
+      env(g, t0, 0.012, dur * 0.22, 0.45, Math.max(0.06, dur * 0.62), peak);
       o.start(t0);
-      o.stop(t0 + dur + 0.05);
-      env(g, t0, Math.min(0.02, dur * 0.15), dur * 0.25, 0.55, Math.max(0.04, dur * 0.55), peak);
-      return o;
+      o.stop(t0 + dur + 0.06);
     }
 
-    function noise(t0, dur, peak, filtroTipo, filtroFreq) {
+    function noise(t0, dur, peak, tipo, freq, q) {
       if (estado.mudo || ctx.state === "closed") return;
-      const n = Math.max(1, Math.floor(ctx.sampleRate * dur));
-      const buf = ctx.createBuffer(1, n, ctx.sampleRate);
-      const data = buf.getChannelData(0);
-      for (let i = 0; i < n; i++) data[i] = Math.random() * 2 - 1;
       const src = ctx.createBufferSource();
-      src.buffer = buf;
-      const filter = ctx.createBiquadFilter();
-      filter.type = filtroTipo || "bandpass";
-      filter.frequency.setValueAtTime(filtroFreq || 1200, t0);
-      filter.Q.value = 0.8;
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0.0001, t0);
-      src.connect(filter);
-      filter.connect(g);
-      g.connect(master);
-      env(g, t0, 0.005, dur * 0.2, 0.35, dur * 0.7, peak);
+      src.buffer = ruidoBuf;
+      src.loop = true;
+      const f = ctx.createBiquadFilter();
+      f.type = tipo || "bandpass";
+      f.frequency.setValueAtTime(freq || 800, t0);
+      f.Q.value = q == null ? 1.1 : q;
+      const g = out();
+      src.connect(f);
+      f.connect(g);
+      env(g, t0, 0.004, dur * 0.18, 0.28, dur * 0.72, peak);
       src.start(t0);
-      src.stop(t0 + dur + 0.02);
+      src.stop(t0 + dur + 0.03);
     }
 
-    function sweep(tipo, f0, f1, t0, dur, peak) {
-      if (estado.mudo || ctx.state === "closed") return;
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = tipo;
-      o.frequency.setValueAtTime(f0, t0);
-      o.frequency.exponentialRampToValueAtTime(Math.max(40, f1), t0 + dur);
-      g.gain.setValueAtTime(0.0001, t0);
-      o.connect(g);
-      g.connect(master);
-      env(g, t0, 0.01, dur * 0.3, 0.4, dur * 0.55, peak);
-      o.start(t0);
-      o.stop(t0 + dur + 0.04);
+    function clickUi(t0) {
+      tone("sine", 880, t0, 0.045, 0.05);
+      tone("triangle", 1320, t0, 0.03, 0.018);
     }
 
     return {
@@ -667,62 +668,67 @@
       },
       atacar() {
         const t = agora();
-        noise(t, 0.08, 0.045, "highpass", 900);
-        sweep("sawtooth", 220, 90, t, 0.11, 0.04);
-        osc("triangle", 160, t + 0.02, 0.09, 0.035);
+        noise(t, 0.09, 0.1, "highpass", 1400, 0.7);
+        tone("sawtooth", 190, t, 0.13, 0.07, 70);
+        tone("triangle", 92, t + 0.015, 0.16, 0.08);
+        noise(t + 0.04, 0.07, 0.055, "bandpass", 420, 1.4);
       },
       defender() {
         const t = agora();
-        osc("triangle", 380, t, 0.14, 0.04);
-        osc("sine", 570, t + 0.03, 0.16, 0.028);
-        noise(t, 0.06, 0.02, "lowpass", 700);
+        tone("triangle", 310, t, 0.09, 0.07);
+        tone("sine", 620, t + 0.02, 0.16, 0.045);
+        tone("sine", 930, t + 0.04, 0.2, 0.03);
+        noise(t, 0.08, 0.04, "lowpass", 900, 0.8);
       },
       magia() {
         const t = agora();
-        sweep("sawtooth", 420, 980, t, 0.18, 0.032);
-        osc("sine", 660, t + 0.05, 0.2, 0.03);
-        osc("sine", 990, t + 0.1, 0.18, 0.022);
-        noise(t + 0.04, 0.12, 0.025, "bandpass", 2200);
+        tone("sawtooth", 280, t, 0.16, 0.045, 720);
+        tone("sine", 540, t + 0.03, 0.22, 0.05);
+        tone("sine", 810, t + 0.07, 0.24, 0.04);
+        tone("triangle", 1080, t + 0.1, 0.2, 0.028);
+        noise(t + 0.02, 0.16, 0.055, "bandpass", 2400, 2.2);
+        noise(t + 0.08, 0.12, 0.03, "highpass", 3200, 0.6);
       },
       hit() {
         const t = agora();
-        noise(t, 0.07, 0.055, "bandpass", 450);
-        sweep("square", 140, 55, t, 0.09, 0.035);
-        osc("triangle", 90, t + 0.01, 0.1, 0.03);
+        noise(t, 0.09, 0.14, "lowpass", 380, 0.7);
+        tone("square", 110, t, 0.08, 0.05, 48);
+        tone("triangle", 68, t, 0.16, 0.09);
+        noise(t + 0.02, 0.06, 0.06, "bandpass", 900, 1.6);
       },
       vitoria() {
         const t = agora();
-        const notas = [523.25, 659.25, 783.99, 1046.5];
+        const notas = [523.25, 659.25, 783.99, 987.77, 1174.66];
         notas.forEach((f, i) => {
-          osc("sine", f, t + i * 0.11, 0.22, 0.04 - i * 0.004);
-          osc("triangle", f * 2, t + i * 0.11, 0.16, 0.012);
+          tone("sine", f, t + i * 0.09, 0.28, 0.055);
+          tone("triangle", f * 2, t + i * 0.09, 0.18, 0.016);
         });
+        noise(t + 0.28, 0.2, 0.025, "highpass", 2800, 0.5);
       },
       derrota() {
         const t = agora();
-        sweep("sawtooth", 220, 90, t, 0.28, 0.035);
-        osc("triangle", 164, t + 0.12, 0.32, 0.03);
-        osc("sine", 110, t + 0.22, 0.36, 0.028);
-        noise(t, 0.2, 0.02, "lowpass", 400);
+        tone("sawtooth", 196, t, 0.34, 0.055, 78);
+        tone("triangle", 147, t + 0.1, 0.4, 0.05);
+        tone("sine", 92, t + 0.18, 0.48, 0.06);
+        noise(t, 0.28, 0.045, "lowpass", 260, 0.6);
       },
       melhorar() {
         const t = agora();
-        [523.25, 659.25, 880].forEach((f, i) => {
-          osc("sine", f, t + i * 0.07, 0.18, 0.032);
+        [392, 523.25, 659.25, 784].forEach((f, i) => {
+          tone("sine", f, t + i * 0.055, 0.2, 0.04);
         });
-        noise(t + 0.05, 0.1, 0.015, "highpass", 2500);
+        noise(t + 0.04, 0.12, 0.022, "highpass", 2600, 0.7);
       },
       chefe() {
         const t = agora();
-        noise(t, 0.18, 0.04, "lowpass", 280);
-        sweep("sawtooth", 90, 180, t, 0.22, 0.04);
-        osc("triangle", 110, t + 0.05, 0.28, 0.035);
-        osc("sine", 220, t + 0.16, 0.24, 0.03);
-        osc("sine", 330, t + 0.28, 0.3, 0.025);
+        noise(t, 0.28, 0.08, "lowpass", 180, 0.5);
+        tone("sawtooth", 70, t, 0.32, 0.07, 140);
+        tone("triangle", 110, t + 0.08, 0.36, 0.05);
+        tone("sine", 220, t + 0.18, 0.32, 0.04);
+        tone("sine", 330, t + 0.3, 0.36, 0.03);
       },
       ui() {
-        const t = agora();
-        osc("sine", 740, t, 0.05, 0.02);
+        clickUi(agora());
       },
     };
   }
