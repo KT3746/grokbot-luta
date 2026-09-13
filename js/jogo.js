@@ -2,7 +2,7 @@
 (() => {
   "use strict";
 
-  const VERSAO = "1.5.1";
+  const VERSAO = "1.5.2";
   const CHAVE = "duelo-rapido";
   const TOTAL_CIRCULOS = 10;
 
@@ -228,16 +228,16 @@
   const CAMPANHA = ["liro", "dagro", "velin", "bruma", "korr", "sile", "ravo", "neme", "orvane", "aurenegra"];
 
   const ARTES = {
-    liro: `<img class="lutador__sprite" src="img/liro.webp?v=1.5.0" alt="">`,
-    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=1.5.0" alt="">`,
-    velin: `<img class="lutador__sprite" src="img/velin.webp?v=1.5.0" alt="">`,
-    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=1.5.0" alt="">`,
-    korr: `<img class="lutador__sprite" src="img/korr.webp?v=1.5.0" alt="">`,
-    sile: `<img class="lutador__sprite" src="img/sile.webp?v=1.5.0" alt="">`,
-    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=1.5.0" alt="">`,
-    neme: `<img class="lutador__sprite" src="img/neme.webp?v=1.5.0" alt="">`,
-    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=1.5.0" alt="">`,
-    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=1.5.0" alt="">`,
+    liro: `<img class="lutador__sprite" src="img/liro.webp?v=1.5.2" alt="">`,
+    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=1.5.2" alt="">`,
+    velin: `<img class="lutador__sprite" src="img/velin.webp?v=1.5.2" alt="">`,
+    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=1.5.2" alt="">`,
+    korr: `<img class="lutador__sprite" src="img/korr.webp?v=1.5.2" alt="">`,
+    sile: `<img class="lutador__sprite" src="img/sile.webp?v=1.5.2" alt="">`,
+    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=1.5.2" alt="">`,
+    neme: `<img class="lutador__sprite" src="img/neme.webp?v=1.5.2" alt="">`,
+    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=1.5.2" alt="">`,
+    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=1.5.2" alt="">`,
   };
 
   const MELHORIAS = [
