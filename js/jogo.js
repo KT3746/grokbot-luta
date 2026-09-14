@@ -2,7 +2,7 @@
 (() => {
   "use strict";
 
-  const VERSAO = "1.5.4";
+  const VERSAO = "1.6.0";
   const CHAVE = "duelo-rapido";
   const TOTAL_CIRCULOS = 10;
 
@@ -228,16 +228,16 @@
   const CAMPANHA = ["liro", "dagro", "velin", "bruma", "korr", "sile", "ravo", "neme", "orvane", "aurenegra"];
 
   const ARTES = {
-    liro: `<img class="lutador__sprite" src="img/liro.webp?v=1.5.4" alt="">`,
-    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=1.5.4" alt="">`,
-    velin: `<img class="lutador__sprite" src="img/velin.webp?v=1.5.4" alt="">`,
-    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=1.5.4" alt="">`,
-    korr: `<img class="lutador__sprite" src="img/korr.webp?v=1.5.4" alt="">`,
-    sile: `<img class="lutador__sprite" src="img/sile.webp?v=1.5.4" alt="">`,
-    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=1.5.4" alt="">`,
-    neme: `<img class="lutador__sprite" src="img/neme.webp?v=1.5.4" alt="">`,
-    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=1.5.4" alt="">`,
-    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=1.5.4" alt="">`,
+    liro: `<img class="lutador__sprite" src="img/liro.webp?v=1.6.0" alt="">`,
+    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=1.6.0" alt="">`,
+    velin: `<img class="lutador__sprite" src="img/velin.webp?v=1.6.0" alt="">`,
+    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=1.6.0" alt="">`,
+    korr: `<img class="lutador__sprite" src="img/korr.webp?v=1.6.0" alt="">`,
+    sile: `<img class="lutador__sprite" src="img/sile.webp?v=1.6.0" alt="">`,
+    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=1.6.0" alt="">`,
+    neme: `<img class="lutador__sprite" src="img/neme.webp?v=1.6.0" alt="">`,
+    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=1.6.0" alt="">`,
+    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=1.6.0" alt="">`,
   };
 
   const MELHORIAS = [
@@ -418,6 +418,8 @@
     flutuantesJogador: document.getElementById("flutuantes-jogador"),
     flutuantesInimigo: document.getElementById("flutuantes-inimigo"),
     arena: document.getElementById("arena"),
+    arenaFlash: document.getElementById("arena-flash"),
+    arenaFaixas: document.getElementById("arena-faixas"),
     descansoSelo: document.getElementById("descanso-selo"),
     descansoTexto: document.getElementById("descanso-texto"),
     descansoStatus: document.getElementById("descanso-status"),
@@ -770,12 +772,69 @@
     return esperar(ms).then(() => el.classList.remove(classe));
   }
 
-  function tremerArena(forte) {
-    els.arena.classList.remove("is-treme", "is-flash", "is-treme-forte");
+  function limparFlashArena() {
+    els.arena.classList.remove(
+      "is-treme",
+      "is-treme-forte",
+      "is-flash",
+      "is-flash-ataque",
+      "is-flash-magia",
+      "is-flash-critico",
+      "is-flash-guarda"
+    );
+  }
+
+  function soltarFaixas(tipo) {
+    if (!els.arenaFaixas) return;
+    const caixa = els.arenaFaixas;
+    caixa.innerHTML = "";
+    const n = tipo === "critico" ? 14 : tipo === "magia" ? 10 : 7;
+    for (let i = 0; i < n; i++) {
+      const p = document.createElement("span");
+      p.className = `faixa faixa--${tipo || "ataque"}`;
+      p.style.setProperty("--x", `${(Math.random() * 70 + 15).toFixed(1)}%`);
+      p.style.setProperty("--y", `${(Math.random() * 45 + 25).toFixed(1)}%`);
+      p.style.setProperty("--d", `${(Math.random() * 0.18).toFixed(2)}s`);
+      p.style.setProperty("--r", `${(Math.random() * 50 - 25).toFixed(0)}deg`);
+      caixa.appendChild(p);
+    }
+    window.setTimeout(() => {
+      if (caixa) caixa.innerHTML = "";
+    }, 520);
+  }
+
+  function tremerArena(forte, tipo) {
+    limparFlashArena();
     void els.arena.offsetWidth;
-    els.arena.classList.add("is-flash", forte ? "is-treme-forte" : "is-treme");
-    return esperar(forte ? 420 : 340).then(() => {
-      els.arena.classList.remove("is-treme", "is-treme-forte", "is-flash");
+    const flash = tipo === "magia"
+      ? "is-flash-magia"
+      : tipo === "critico"
+        ? "is-flash-critico"
+        : tipo === "guarda"
+          ? "is-flash-guarda"
+          : "is-flash-ataque";
+    els.arena.classList.add(flash, forte || tipo === "critico" ? "is-treme-forte" : "is-treme");
+    soltarFaixas(tipo || "ataque");
+    return esperar(forte || tipo === "critico" ? 460 : 340).then(limparFlashArena);
+  }
+
+  function pulsarAcao(acao) {
+    const btn = acao === "atacar" ? els.btnAtacar : acao === "defender" ? els.btnDefender : els.btnMagia;
+    if (!btn) return;
+    btn.classList.remove("is-pulso");
+    void btn.offsetWidth;
+    btn.classList.add("is-pulso");
+    window.setTimeout(() => btn.classList.remove("is-pulso"), 280);
+  }
+
+  function precarregarArtes() {
+    const urls = ["img/nara.webp?v=1.6.0"].concat(
+      Object.keys(ARTES).map((id) => `img/${id}.webp?v=1.6.0`)
+    );
+    urls.forEach((src) => {
+      const im = new Image();
+      im.decoding = "async";
+      im.src = src;
     });
   }
 
@@ -1042,10 +1101,11 @@
       ator.essencia = Math.min(ator.essenciaMax, ator.essencia + ganho);
       elAtor.classList.add("is-guarda");
       if (estado.audio) estado.audio.defender();
+      if (atorChave === "jogador") pulsarAcao("defender");
       relatar(atorChave === "jogador" ? TEXTO.voceDefendeu(ganho) : TEXTO.inimigoDefendeu(ator.nome, ganho));
       soltarNumero(atorChave, TEXTO.recuouEssencia(ganho), "numero-flutuante--cura");
       pintarHud();
-      await esperar(520);
+      await tremerArena(false, "guarda");
       return;
     }
 
@@ -1064,9 +1124,10 @@
         if (roubo) soltarNumero(atorChave, `+${roubo}`, "numero-flutuante--cura");
       }
       if (estado.audio) estado.audio.magia();
-      await animar(elAtor, "is-magia", 420);
+      if (atorChave === "jogador") pulsarAcao("magia");
+      await animar(elAtor, "is-magia", 460);
       if (estado.audio) estado.audio.hit();
-      vibrar(ator.chefe ? 28 : 18);
+      vibrar(ator.chefe ? 32 : 20);
       if (atorChave === "jogador") estado.stats.danoFeito += resultado.dano;
       else estado.stats.danoTomado += resultado.dano;
       soltarNumero(
@@ -1081,8 +1142,8 @@
         relatar(`${TEXTO.inimigoMagia(ator.nome, ator.magia.nome, resultado.dano)}${extra}`);
       }
       pintarHud();
-      const hit = animar(elAlvo, "is-hit", ator.chefe ? 520 : 420);
-      const treme = tremerArena(!!ator.chefe);
+      const hit = animar(elAlvo, "is-hit", ator.chefe ? 560 : 460);
+      const treme = tremerArena(!!ator.chefe, resultado.bloqueado ? "guarda" : "magia");
       await Promise.all([hit, treme]);
       return;
     }
@@ -1090,9 +1151,10 @@
     const { valor, critico } = danoBruto(ator, "atacar");
     const resultado = aplicarDano(alvo, valor, 0);
     if (estado.audio) estado.audio.atacar();
-    await animar(elAtor, "is-ataque", 380);
+    if (atorChave === "jogador") pulsarAcao("atacar");
+    await animar(elAtor, "is-ataque", 400);
     if (estado.audio) estado.audio.hit();
-    vibrar(ator.chefe ? 22 : 12);
+    vibrar(critico ? 28 : ator.chefe ? 22 : 12);
     const classeNum = critico
       ? "numero-flutuante--critico"
       : resultado.bloqueado
@@ -1100,7 +1162,7 @@
         : "numero-flutuante--dano";
     if (atorChave === "jogador") estado.stats.danoFeito += resultado.dano;
     else estado.stats.danoTomado += resultado.dano;
-    soltarNumero(ladoAlvo, `−${resultado.dano}`, classeNum);
+    soltarNumero(ladoAlvo, critico ? `−${resultado.dano}!` : `−${resultado.dano}`, classeNum);
     const partes = [];
     if (atorChave === "jogador") partes.push(TEXTO.voceAtacou(resultado.dano, alvo.nome));
     else partes.push(TEXTO.inimigoAtacou(ator.nome, resultado.dano));
@@ -1108,8 +1170,9 @@
     if (resultado.bloqueado) partes.push(TEXTO.escudoAbsorveu);
     relatar(partes.join(" "));
     pintarHud();
-    const hit = animar(elAlvo, "is-hit", critico || ator.chefe ? 500 : 400);
-    const treme = tremerArena(!!(critico || ator.chefe));
+    const hit = animar(elAlvo, "is-hit", critico || ator.chefe ? 540 : 420);
+    const tipoFlash = critico ? "critico" : resultado.bloqueado ? "guarda" : "ataque";
+    const treme = tremerArena(!!(critico || ator.chefe), tipoFlash);
     await Promise.all([hit, treme]);
   }
 
@@ -1519,6 +1582,7 @@
   }
 
   function iniciar() {
+    precarregarArtes();
     atualizarSomUi();
     atualizarTituloBotoes();
     mostrarTela("titulo");

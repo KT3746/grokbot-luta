@@ -4,7 +4,7 @@ Jogo de luta em turnos, original, feito para o navegador. Você controla **Nara*
 
 Jogue online: [https://kt3746.github.io/grokbot-luta/](https://kt3746.github.io/grokbot-luta/)
 
-Versão **1.5.4** — corrige clique no título e Nova campanha que não zerava o save.
+Versão **1.6.0** — combate mais vivo (flash, faíscas, pré-carga das artes).
 
 ## Como jogar
 

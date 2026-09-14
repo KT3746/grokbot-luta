@@ -1542,3 +1542,86 @@ button:focus-visible,
   position: relative;
   z-index: 5;
 }
+
+
+/* 1.6.0 — combate mais vivo */
+.arena.is-flash-ataque .arena__flash {
+  background: rgba(255, 140, 90, 0.28);
+  animation: flash-arena 0.3s ease;
+}
+.arena.is-flash-magia .arena__flash {
+  background: rgba(176, 140, 255, 0.32);
+  animation: flash-arena 0.34s ease;
+}
+.arena.is-flash-critico .arena__flash {
+  background: rgba(255, 224, 138, 0.38);
+  animation: flash-arena 0.38s ease;
+}
+.arena.is-flash-guarda .arena__flash {
+  background: rgba(106, 168, 255, 0.26);
+  animation: flash-arena 0.28s ease;
+}
+.arena__faixas {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+}
+.faixa {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(var(--r)) scale(0.4);
+  animation: faixa-estoura 0.48s ease var(--d) forwards;
+  background: #ffd1c8;
+  box-shadow: 0 0 10px rgba(255, 160, 100, 0.55);
+}
+.faixa--magia {
+  background: #e0c4ff;
+  box-shadow: 0 0 12px rgba(176, 140, 255, 0.65);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.faixa--critico {
+  background: #ffe08a;
+  box-shadow: 0 0 14px rgba(255, 224, 138, 0.8);
+  width: 9px;
+  height: 9px;
+}
+.faixa--guarda {
+  background: #9ecbff;
+  box-shadow: 0 0 10px rgba(106, 168, 255, 0.6);
+}
+.faixa--ataque {
+  background: #ffb089;
+}
+@keyframes faixa-estoura {
+  0% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--r)) scale(0.3); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + 28px), calc(-50% - 36px)) rotate(var(--r)) scale(1.15); }
+}
+.acao.is-pulso {
+  transform: scale(0.96);
+  filter: brightness(1.12);
+  box-shadow: 0 0 0 2px rgba(232, 195, 106, 0.45), 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+.numero-flutuante--critico {
+  font-size: 2.15rem;
+  letter-spacing: 0.04em;
+}
+.relato {
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.app.is-vitoria .relato,
+.tela--luta .relato {
+  border-color: rgba(243, 234, 216, 0.22);
+}
+.arena[data-tema] .arena__poeira {
+  opacity: 0.85;
+}
