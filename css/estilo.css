@@ -1693,3 +1693,30 @@ button:focus-visible,
     height: min(38vh, 280px);
   }
 }
+
+
+/* 1.6.2 — cura do descanso sempre visível */
+.descanso-texto.is-cura {
+  display: block !important;
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(125, 255, 196, 0.1);
+  border: 1px solid rgba(125, 255, 196, 0.28);
+  color: #b8ffe0;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+.descanso-chip:has(.descanso-chip__k):first-child .descanso-chip__v {
+  color: #b8ffe0;
+}
+.descanso-status .descanso-chip:first-child {
+  border-color: rgba(125, 255, 196, 0.35);
+  background: rgba(125, 255, 196, 0.08);
+}
+@media (max-height: 560px) {
+  .descanso-texto.is-cura {
+    font-size: 0.82rem;
+    padding: 6px 10px;
+  }
+}

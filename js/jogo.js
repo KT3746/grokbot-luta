@@ -2,7 +2,7 @@
 (() => {
   "use strict";
 
-  const VERSAO = "1.6.1";
+  const VERSAO = "1.6.2";
   const CHAVE = "duelo-rapido";
   const TOTAL_CIRCULOS = 10;
 
@@ -229,16 +229,16 @@
   const CAMPANHA = ["liro", "dagro", "velin", "bruma", "korr", "sile", "ravo", "neme", "orvane", "aurenegra"];
 
   const ARTES = {
-    liro: `<img class="lutador__sprite" src="img/liro.webp?v=1.6.1" alt="">`,
-    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=1.6.1" alt="">`,
-    velin: `<img class="lutador__sprite" src="img/velin.webp?v=1.6.1" alt="">`,
-    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=1.6.1" alt="">`,
-    korr: `<img class="lutador__sprite" src="img/korr.webp?v=1.6.1" alt="">`,
-    sile: `<img class="lutador__sprite" src="img/sile.webp?v=1.6.1" alt="">`,
-    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=1.6.1" alt="">`,
-    neme: `<img class="lutador__sprite" src="img/neme.webp?v=1.6.1" alt="">`,
-    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=1.6.1" alt="">`,
-    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=1.6.1" alt="">`,
+    liro: `<img class="lutador__sprite" src="img/liro.webp?v=1.6.2" alt="">`,
+    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=1.6.2" alt="">`,
+    velin: `<img class="lutador__sprite" src="img/velin.webp?v=1.6.2" alt="">`,
+    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=1.6.2" alt="">`,
+    korr: `<img class="lutador__sprite" src="img/korr.webp?v=1.6.2" alt="">`,
+    sile: `<img class="lutador__sprite" src="img/sile.webp?v=1.6.2" alt="">`,
+    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=1.6.2" alt="">`,
+    neme: `<img class="lutador__sprite" src="img/neme.webp?v=1.6.2" alt="">`,
+    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=1.6.2" alt="">`,
+    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=1.6.2" alt="">`,
   };
 
   const MELHORIAS = [
@@ -829,8 +829,8 @@
   }
 
   function precarregarArtes() {
-    const urls = ["img/nara.webp?v=1.6.1"].concat(
-      Object.keys(ARTES).map((id) => `img/${id}.webp?v=1.6.1`)
+    const urls = ["img/nara.webp?v=1.6.2"].concat(
+      Object.keys(ARTES).map((id) => `img/${id}.webp?v=1.6.2`)
     );
     urls.forEach((src) => {
       const im = new Image();
@@ -1287,14 +1287,19 @@
     const proximo = rivalAtual();
     els.descansoSelo.textContent = TEXTO.descansoSelo(estado.circulo);
     const cura = estado.curaDescanso;
+    let textoCura = TEXTO.descansoTexto;
+    let chipCura = "";
     if (cura && cura.vida > 0) {
-      els.descansoTexto.textContent = `Descanso no círculo: +${cura.vida} de vida e essência cheia. Escolha um reforço.`;
+      textoCura = `Descanso: +${cura.vida} de vida e essência cheia. Escolha um reforço.`;
+      chipCura = placaStatus("Descanso", `+${cura.vida} vida · essência cheia`);
     } else if (cura) {
-      els.descansoTexto.textContent = "Descanso no círculo: essência cheia. Escolha um reforço.";
-    } else {
-      els.descansoTexto.textContent = TEXTO.descansoTexto;
+      textoCura = "Descanso: essência cheia. Escolha um reforço.";
+      chipCura = placaStatus("Descanso", "Essência cheia");
     }
+    els.descansoTexto.textContent = textoCura;
+    els.descansoTexto.classList.toggle("is-cura", !!cura);
     els.descansoStatus.innerHTML =
+      chipCura +
       placaStatus("Vida", `${j.vida}/${j.vidaMax}`) +
       placaStatus("Essência", `${j.essencia}/${j.essenciaMax}`) +
       placaStatus("Ataque", `${j.ataque.min}–${j.ataque.max}`) +
