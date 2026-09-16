@@ -1625,3 +1625,71 @@ button:focus-visible,
 .arena[data-tema] .arena__poeira {
   opacity: 0.85;
 }
+
+
+/* 1.6.1 — legibilidade, turno claro, ações à mão */
+.titulo-versao {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(232, 195, 106, 0.72);
+}
+.titulo-art {
+  overflow: hidden;
+}
+.titulo-art__nara img,
+.titulo-art__rival img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+}
+.titulo-intro {
+  position: relative;
+  z-index: 2;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(8, 10, 18, 0.72);
+  border: 1px solid rgba(243, 234, 216, 0.16);
+  color: #f3ead8;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+}
+.titulo-dica {
+  position: relative;
+  z-index: 2;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(8, 10, 18, 0.55);
+  color: #d9d0c2;
+}
+.tela--luta .acoes {
+  position: sticky;
+  bottom: 0;
+  z-index: 9;
+  margin-top: auto;
+  padding-top: 10px;
+  padding-bottom: calc(8px + var(--safe-b));
+  background: linear-gradient(180deg, rgba(10, 12, 20, 0) 0%, rgba(10, 12, 20, 0.92) 28%, rgba(10, 12, 20, 0.98) 100%);
+}
+.tela--luta.is-vez-inimigo .centro-turno__vez,
+.tela--luta .centro-turno__vez {
+  min-height: 1.2em;
+}
+.descanso-cura {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(125, 255, 196, 0.08);
+  border: 1px solid rgba(125, 255, 196, 0.22);
+  color: #b8ffe0;
+  font-size: 0.92rem;
+}
+@media (max-height: 800px) {
+  .tela--luta .arena {
+    min-height: 210px;
+    height: min(38vh, 280px);
+  }
+}

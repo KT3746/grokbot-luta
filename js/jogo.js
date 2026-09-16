@@ -2,14 +2,15 @@
 (() => {
   "use strict";
 
-  const VERSAO = "1.6.0";
+  const VERSAO = "1.6.1";
   const CHAVE = "duelo-rapido";
   const TOTAL_CIRCULOS = 10;
 
   const TEXTO = {
     titulo: "LUTA",
     suaVez: "Sua vez",
-    vezInimigo: "Vez do inimigo",
+    resolvendo: "Resolvendo…",
+    vezInimigo: "Rival agindo…",
     turno: (n) => `Turno ${n}`,
     circulo: (n) => `Círculo ${n}/${TOTAL_CIRCULOS}`,
     voceAtacou: (dano, nome) => `Ataque: −${dano} em ${nome}.`,
@@ -228,16 +229,16 @@
   const CAMPANHA = ["liro", "dagro", "velin", "bruma", "korr", "sile", "ravo", "neme", "orvane", "aurenegra"];
 
   const ARTES = {
-    liro: `<img class="lutador__sprite" src="img/liro.webp?v=1.6.0" alt="">`,
-    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=1.6.0" alt="">`,
-    velin: `<img class="lutador__sprite" src="img/velin.webp?v=1.6.0" alt="">`,
-    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=1.6.0" alt="">`,
-    korr: `<img class="lutador__sprite" src="img/korr.webp?v=1.6.0" alt="">`,
-    sile: `<img class="lutador__sprite" src="img/sile.webp?v=1.6.0" alt="">`,
-    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=1.6.0" alt="">`,
-    neme: `<img class="lutador__sprite" src="img/neme.webp?v=1.6.0" alt="">`,
-    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=1.6.0" alt="">`,
-    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=1.6.0" alt="">`,
+    liro: `<img class="lutador__sprite" src="img/liro.webp?v=1.6.1" alt="">`,
+    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=1.6.1" alt="">`,
+    velin: `<img class="lutador__sprite" src="img/velin.webp?v=1.6.1" alt="">`,
+    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=1.6.1" alt="">`,
+    korr: `<img class="lutador__sprite" src="img/korr.webp?v=1.6.1" alt="">`,
+    sile: `<img class="lutador__sprite" src="img/sile.webp?v=1.6.1" alt="">`,
+    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=1.6.1" alt="">`,
+    neme: `<img class="lutador__sprite" src="img/neme.webp?v=1.6.1" alt="">`,
+    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=1.6.1" alt="">`,
+    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=1.6.1" alt="">`,
   };
 
   const MELHORIAS = [
@@ -828,8 +829,8 @@
   }
 
   function precarregarArtes() {
-    const urls = ["img/nara.webp?v=1.6.0"].concat(
-      Object.keys(ARTES).map((id) => `img/${id}.webp?v=1.6.0`)
+    const urls = ["img/nara.webp?v=1.6.1"].concat(
+      Object.keys(ARTES).map((id) => `img/${id}.webp?v=1.6.1`)
     );
     urls.forEach((src) => {
       const im = new Image();
@@ -982,6 +983,12 @@
     }
     estado.ocupado = false;
     setBotoes(true);
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      const ae = document.activeElement;
+      if (ae === els.btnComecar || ae === els.btnContinuar || ae === els.btnNova || ae === els.btnEntendi) {
+        ae.blur();
+      }
+    }
     els.btnAtacar.focus();
   }
 
@@ -1240,9 +1247,14 @@
   function descansoCuraLeve() {
     const j = estado.jogador;
     const ganho = Math.ceil(j.vidaMax * 0.12);
+    const antes = j.vida;
     j.vida = Math.min(j.vidaMax, j.vida + ganho);
     j.essencia = j.essenciaMax;
     j.guarda = false;
+    estado.curaDescanso = {
+      vida: j.vida - antes,
+      essencia: true,
+    };
   }
 
   function melhoriaPorId(id) {
@@ -1274,7 +1286,14 @@
     const j = estado.jogador;
     const proximo = rivalAtual();
     els.descansoSelo.textContent = TEXTO.descansoSelo(estado.circulo);
-    els.descansoTexto.textContent = TEXTO.descansoTexto;
+    const cura = estado.curaDescanso;
+    if (cura && cura.vida > 0) {
+      els.descansoTexto.textContent = `Descanso no círculo: +${cura.vida} de vida e essência cheia. Escolha um reforço.`;
+    } else if (cura) {
+      els.descansoTexto.textContent = "Descanso no círculo: essência cheia. Escolha um reforço.";
+    } else {
+      els.descansoTexto.textContent = TEXTO.descansoTexto;
+    }
     els.descansoStatus.innerHTML =
       placaStatus("Vida", `${j.vida}/${j.vidaMax}`) +
       placaStatus("Essência", `${j.essencia}/${j.essenciaMax}`) +
@@ -1351,6 +1370,7 @@
     }
     estado.ocupado = true;
     setBotoes(false);
+    els.txtVez.textContent = TEXTO.resolvendo;
     estado.jogador.atingidoNestaRodada = false;
     estado.inimigo.atingidoNestaRodada = false;
     await resolverAcao("jogador", acao);
@@ -1364,9 +1384,8 @@
     els.txtVez.textContent = TEXTO.vezInimigo;
     setVezInimigo(true);
     pintarHud();
-    els.txtVez.textContent = TEXTO.vezInimigo;
     void els.txtVez.offsetWidth;
-    await esperar(1100);
+    await esperar(900);
     const acaoIA = escolherAcaoIA();
     await resolverAcao("inimigo", acaoIA);
     const recapInimigo = els.relato.textContent;
@@ -1542,6 +1561,7 @@
       mostrarTutorial(novaCampanha);
     });
     els.btnInicio.addEventListener("click", () => {
+      if (els.modalFim.hidden) return;
       els.modalFim.hidden = true;
       atualizarTituloBotoes();
       mostrarTela("titulo");
@@ -1589,6 +1609,8 @@
     ligarEventos();
     document.title = TEXTO.titulo;
     els.app.dataset.versao = VERSAO;
+    const verEl = document.getElementById("titulo-versao");
+    if (verEl) verEl.textContent = `v${VERSAO}`;
   }
 
   iniciar();
