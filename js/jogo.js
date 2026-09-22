@@ -2,7 +2,7 @@
 (() => {
   "use strict";
 
-  const VERSAO = "1.7.0";
+  const VERSAO = "1.7.1";
   const CHAVE = "duelo-rapido";
   const TOTAL_CIRCULOS = 10;
 
@@ -233,16 +233,16 @@
   const CAMPANHA = ["liro", "dagro", "velin", "bruma", "korr", "sile", "ravo", "neme", "orvane", "aurenegra"];
 
   const ARTES = {
-    liro: `<img class="lutador__sprite" src="img/liro.webp?v=1.7.0" alt="">`,
-    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=1.7.0" alt="">`,
-    velin: `<img class="lutador__sprite" src="img/velin.webp?v=1.7.0" alt="">`,
-    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=1.7.0" alt="">`,
-    korr: `<img class="lutador__sprite" src="img/korr.webp?v=1.7.0" alt="">`,
-    sile: `<img class="lutador__sprite" src="img/sile.webp?v=1.7.0" alt="">`,
-    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=1.7.0" alt="">`,
-    neme: `<img class="lutador__sprite" src="img/neme.webp?v=1.7.0" alt="">`,
-    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=1.7.0" alt="">`,
-    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=1.7.0" alt="">`,
+    liro: `<img class="lutador__sprite" src="https://cdn.jsdelivr.net/gh/KT3746/grokbot-luta@main/img/liro.webp" alt="">`,
+    dagro: `<img class="lutador__sprite" src="https://cdn.jsdelivr.net/gh/KT3746/grokbot-luta@main/img/dagro.webp" alt="">`,
+    velin: `<img class="lutador__sprite" src="https://cdn.jsdelivr.net/gh/KT3746/grokbot-luta@main/img/velin.webp" alt="">`,
+    bruma: `<img class="lutador__sprite" src="https://cdn.jsdelivr.net/gh/KT3746/grokbot-luta@main/img/bruma.webp" alt="">`,
+    korr: `<img class="lutador__sprite" src="https://cdn.jsdelivr.net/gh/KT3746/grokbot-luta@main/img/korr.webp" alt="">`,
+    sile: `<img class="lutador__sprite" src="https://cdn.jsdelivr.net/gh/KT3746/grokbot-luta@main/img/sile.webp" alt="">`,
+    ravo: `<img class="lutador__sprite" src="https://cdn.jsdelivr.net/gh/KT3746/grokbot-luta@main/img/ravo.webp" alt="">`,
+    neme: `<img class="lutador__sprite" src="https://cdn.jsdelivr.net/gh/KT3746/grokbot-luta@main/img/neme.webp" alt="">`,
+    orvane: `<img class="lutador__sprite" src="https://cdn.jsdelivr.net/gh/KT3746/grokbot-luta@main/img/orvane.webp" alt="">`,
+    aurenegra: `<img class="lutador__sprite" src="https://cdn.jsdelivr.net/gh/KT3746/grokbot-luta@main/img/aurenegra.webp" alt="">`,
   };
 
   const MELHORIAS = [
@@ -858,8 +858,9 @@
   }
 
   function precarregarArtes() {
-    const urls = ["img/nara.webp?v=1.7.0"].concat(
-      Object.keys(ARTES).map((id) => `img/${id}.webp?v=1.7.0`)
+    const base = "https://cdn.jsdelivr.net/gh/KT3746/grokbot-luta@main/img";
+    const urls = [`${base}/nara.webp`].concat(
+      Object.keys(ARTES).map((id) => `${base}/${id}.webp`)
     );
     urls.forEach((src) => {
       const im = new Image();
