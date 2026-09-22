@@ -1720,3 +1720,116 @@ button:focus-visible,
     padding: 6px 10px;
   }
 }
+
+
+/* 1.7.0 — polish de combate AAA-indie */
+.barra__trilha {
+  position: relative;
+  overflow: hidden;
+}
+.barra__fantasma {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform: scaleX(1);
+  background: rgba(255, 180, 140, 0.45);
+  pointer-events: none;
+  transition: transform 0.55s ease;
+  z-index: 0;
+}
+.barra__fantasma.is-sumindo {
+  background: rgba(255, 120, 90, 0.55);
+}
+.barra__preenchimento {
+  position: relative;
+  z-index: 1;
+}
+.placa.is-critica {
+  animation: placa-critica 1.1s ease-in-out infinite;
+  border-color: rgba(255, 90, 90, 0.55);
+  box-shadow: 0 0 18px rgba(255, 70, 70, 0.28);
+}
+@keyframes placa-critica {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.12); }
+}
+.tela--luta.is-sua-vez .acoes {
+  filter: none;
+}
+.tela--luta.is-sua-vez .acao:not(:disabled) {
+  box-shadow: 0 0 0 1px rgba(232, 195, 106, 0.35), 0 10px 26px rgba(0, 0, 0, 0.35);
+}
+.tela--luta.is-sua-vez .acao[data-acao="atacar"]:not(:disabled) {
+  animation: acao-pronta 1.8s ease-in-out infinite;
+}
+@keyframes acao-pronta {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+.lutador.is-telegraph-ataque {
+  filter: drop-shadow(0 0 16px rgba(255, 140, 90, 0.65));
+  transform: translateX(calc(var(--dir, -1) * 6px)) scale(1.04);
+}
+.lutador.is-telegraph-defesa {
+  filter: drop-shadow(0 0 14px rgba(106, 168, 255, 0.7));
+}
+.lutador.is-telegraph-magia {
+  filter: drop-shadow(0 0 18px rgba(176, 140, 255, 0.75));
+  transform: scale(1.06);
+}
+.lutador--inimigo {
+  --dir: -1;
+}
+.arena.is-rodada::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 60%, rgba(232, 195, 106, 0.22), transparent 65%);
+  animation: rodada-flash 0.45s ease-out;
+}
+@keyframes rodada-flash {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.arena.is-vitoria-arena {
+  animation: vitoria-arena 0.55s ease;
+}
+@keyframes vitoria-arena {
+  0% { filter: brightness(1); }
+  40% { filter: brightness(1.25) saturate(1.15); }
+  100% { filter: brightness(1); }
+}
+.tutorial-lead {
+  margin: 0 0 10px;
+  font-weight: 800;
+  color: var(--ouro);
+  letter-spacing: 0.02em;
+}
+.tutorial-lista li {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(243, 234, 216, 0.08);
+}
+.tutorial-lista li:last-child {
+  border-bottom: 0;
+}
+.centro-turno__vez {
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+.tela--luta.is-sua-vez .centro-turno__vez {
+  color: #ffe8a8;
+  text-shadow: 0 0 12px rgba(232, 195, 106, 0.45);
+}
+@media (prefers-reduced-motion: reduce) {
+  .placa.is-critica,
+  .tela--luta.is-sua-vez .acao[data-acao="atacar"]:not(:disabled),
+  .arena.is-rodada::before,
+  .arena.is-vitoria-arena,
+  .lutador.is-telegraph-ataque,
+  .lutador.is-telegraph-magia {
+    animation: none !important;
+    transform: none !important;
+  }
+}

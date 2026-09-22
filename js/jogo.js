@@ -2,7 +2,7 @@
 (() => {
   "use strict";
 
-  const VERSAO = "1.6.2";
+  const VERSAO = "1.7.0";
   const CHAVE = "duelo-rapido";
   const TOTAL_CIRCULOS = 10;
 
@@ -11,6 +11,10 @@
     suaVez: "Sua vez",
     resolvendo: "Resolvendo…",
     vezInimigo: "Rival agindo…",
+    rivalPreparaAtacar: "Rival prepara o golpe…",
+    rivalPreparaDefender: "Rival levanta a guarda…",
+    rivalPreparaMagia: "Rival canaliza magia…",
+    suaVezDrama: "Sua vez — escolha!",
     turno: (n) => `Turno ${n}`,
     circulo: (n) => `Círculo ${n}/${TOTAL_CIRCULOS}`,
     voceAtacou: (dano, nome) => `Ataque: −${dano} em ${nome}.`,
@@ -229,16 +233,16 @@
   const CAMPANHA = ["liro", "dagro", "velin", "bruma", "korr", "sile", "ravo", "neme", "orvane", "aurenegra"];
 
   const ARTES = {
-    liro: `<img class="lutador__sprite" src="img/liro.webp?v=1.6.2" alt="">`,
-    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=1.6.2" alt="">`,
-    velin: `<img class="lutador__sprite" src="img/velin.webp?v=1.6.2" alt="">`,
-    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=1.6.2" alt="">`,
-    korr: `<img class="lutador__sprite" src="img/korr.webp?v=1.6.2" alt="">`,
-    sile: `<img class="lutador__sprite" src="img/sile.webp?v=1.6.2" alt="">`,
-    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=1.6.2" alt="">`,
-    neme: `<img class="lutador__sprite" src="img/neme.webp?v=1.6.2" alt="">`,
-    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=1.6.2" alt="">`,
-    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=1.6.2" alt="">`,
+    liro: `<img class="lutador__sprite" src="img/liro.webp?v=1.7.0" alt="">`,
+    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=1.7.0" alt="">`,
+    velin: `<img class="lutador__sprite" src="img/velin.webp?v=1.7.0" alt="">`,
+    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=1.7.0" alt="">`,
+    korr: `<img class="lutador__sprite" src="img/korr.webp?v=1.7.0" alt="">`,
+    sile: `<img class="lutador__sprite" src="img/sile.webp?v=1.7.0" alt="">`,
+    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=1.7.0" alt="">`,
+    neme: `<img class="lutador__sprite" src="img/neme.webp?v=1.7.0" alt="">`,
+    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=1.7.0" alt="">`,
+    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=1.7.0" alt="">`,
   };
 
   const MELHORIAS = [
@@ -412,6 +416,7 @@
     nomeJogador: document.getElementById("nome-jogador"),
     nomeInimigo: document.getElementById("nome-inimigo"),
     papelInimigo: document.getElementById("papel-inimigo"),
+    placaJogador: document.getElementById("placa-jogador"),
     placaInimigo: document.getElementById("placa-inimigo"),
     lutadorJogador: document.getElementById("lutador-jogador"),
     lutadorInimigo: document.getElementById("lutador-inimigo"),
@@ -733,6 +738,30 @@
       ui() {
         clickUi(agora());
       },
+      aviso() {
+        const t = agora();
+        tone("triangle", 220, t, 0.08, 0.04);
+        tone("sine", 330, t + 0.05, 0.1, 0.03);
+      },
+      critico() {
+        const t = agora();
+        noise(t, 0.1, 0.16, "lowpass", 320, 0.6);
+        tone("square", 160, t, 0.1, 0.06, 55);
+        tone("sawtooth", 90, t, 0.18, 0.08, 40);
+        tone("sine", 880, t + 0.04, 0.12, 0.035);
+        noise(t + 0.03, 0.08, 0.07, "bandpass", 1200, 1.4);
+      },
+      cura() {
+        const t = agora();
+        [523.25, 659.25, 783.99].forEach((f, i) => {
+          tone("sine", f, t + i * 0.05, 0.18, 0.035);
+        });
+      },
+      turno() {
+        const t = agora();
+        tone("sine", 440, t, 0.07, 0.03);
+        tone("triangle", 660, t + 0.04, 0.09, 0.025);
+      },
     };
   }
 
@@ -829,8 +858,8 @@
   }
 
   function precarregarArtes() {
-    const urls = ["img/nara.webp?v=1.6.2"].concat(
-      Object.keys(ARTES).map((id) => `img/${id}.webp?v=1.6.2`)
+    const urls = ["img/nara.webp?v=1.7.0"].concat(
+      Object.keys(ARTES).map((id) => `img/${id}.webp?v=1.7.0`)
     );
     urls.forEach((src) => {
       const im = new Image();
@@ -841,11 +870,31 @@
 
   function setBarra(preenchimento, meter, atual, maximo, txt, barraPai) {
     const pct = Math.max(0, Math.min(1, atual / maximo));
+    const prev = Number(preenchimento.dataset.pct || pct);
     preenchimento.style.transform = `scaleX(${pct})`;
+    preenchimento.dataset.pct = String(pct);
     meter.setAttribute("aria-valuemax", String(maximo));
     meter.setAttribute("aria-valuenow", String(atual));
     txt.textContent = `${atual}/${maximo}`;
-    if (barraPai) barraPai.classList.toggle("is-baixa", pct <= 0.3);
+    if (barraPai) {
+      barraPai.classList.toggle("is-baixa", pct <= 0.3);
+      let ghost = barraPai.querySelector(".barra__fantasma");
+      if (!ghost) {
+        ghost = document.createElement("div");
+        ghost.className = "barra__fantasma";
+        const trilha = barraPai.querySelector(".barra__trilha");
+        if (trilha) trilha.insertBefore(ghost, preenchimento);
+      }
+      if (pct < prev - 0.01) {
+        ghost.style.transform = `scaleX(${prev})`;
+        ghost.classList.remove("is-sumindo");
+        void ghost.offsetWidth;
+        ghost.classList.add("is-sumindo");
+        ghost.style.transform = `scaleX(${pct})`;
+      } else {
+        ghost.style.transform = `scaleX(${pct})`;
+      }
+    }
   }
 
   function pintarPips() {
@@ -901,6 +950,8 @@
     );
     els.lutadorJogador.classList.toggle("is-guarda", j.guarda);
     els.lutadorInimigo.classList.toggle("is-guarda", i.guarda);
+    els.placaJogador.classList.toggle("is-critica", j.vida / j.vidaMax <= 0.3);
+    els.placaInimigo.classList.toggle("is-critica", i.vida / i.vidaMax <= 0.3);
     els.detalheAtacar.textContent = `${j.ataque.min}–${j.ataque.max} dano`;
     els.detalheMagia.textContent = `${j.magia.custo} essência · ${j.magia.min}–${j.magia.max}`;
     els.detalheDefender.textContent = `Guarda +${j.essenciaDefesa} essência`;
@@ -912,6 +963,7 @@
     els.btnDefender.disabled = !ativos;
     els.btnMagia.disabled = !magiaOk;
     els.acoes.setAttribute("aria-disabled", ativos ? "false" : "true");
+    els.telaLuta.classList.toggle("is-sua-vez", !!ativos);
   }
 
   function setVezInimigo(aguardando) {
@@ -983,6 +1035,8 @@
     }
     estado.ocupado = false;
     setBotoes(true);
+    if (estado.audio) estado.audio.turno();
+    els.txtVez.textContent = TEXTO.suaVezDrama;
     if (document.activeElement && typeof document.activeElement.blur === "function") {
       const ae = document.activeElement;
       if (ae === els.btnComecar || ae === els.btnContinuar || ae === els.btnNova || ae === els.btnEntendi) {
@@ -1107,7 +1161,10 @@
       const ganho = ator.essenciaDefesa;
       ator.essencia = Math.min(ator.essenciaMax, ator.essencia + ganho);
       elAtor.classList.add("is-guarda");
-      if (estado.audio) estado.audio.defender();
+      if (estado.audio) {
+        estado.audio.defender();
+        estado.audio.cura();
+      }
       if (atorChave === "jogador") pulsarAcao("defender");
       relatar(atorChave === "jogador" ? TEXTO.voceDefendeu(ganho) : TEXTO.inimigoDefendeu(ator.nome, ganho));
       soltarNumero(atorChave, TEXTO.recuouEssencia(ganho), "numero-flutuante--cura");
@@ -1160,7 +1217,10 @@
     if (estado.audio) estado.audio.atacar();
     if (atorChave === "jogador") pulsarAcao("atacar");
     await animar(elAtor, "is-ataque", 400);
-    if (estado.audio) estado.audio.hit();
+    if (estado.audio) {
+      if (critico) estado.audio.critico();
+      else estado.audio.hit();
+    }
     vibrar(critico ? 28 : ator.chefe ? 22 : 12);
     const classeNum = critico
       ? "numero-flutuante--critico"
@@ -1213,10 +1273,13 @@
     foco.focus();
   }
 
-  function encerrar(vitoria) {
+  async function encerrar(vitoria) {
     if (vitoria) {
       els.lutadorInimigo.classList.add("is-cair");
+      els.arena.classList.add("is-vitoria-arena");
       if (estado.audio) estado.audio.vitoria();
+      await esperar(520);
+      els.arena.classList.remove("is-vitoria-arena");
       if (estado.circulo >= TOTAL_CIRCULOS - 1) {
         estado.stats.circulos = TOTAL_CIRCULOS;
         estado.fase = "concluida";
@@ -1367,6 +1430,28 @@
     iniciarCirculo({ curarJogador: false });
   }
 
+
+  function textoTelegraph(acao) {
+    if (acao === "defender") return TEXTO.rivalPreparaDefender;
+    if (acao === "magia") return TEXTO.rivalPreparaMagia;
+    return TEXTO.rivalPreparaAtacar;
+  }
+
+  async function telegraphInimigo(acao) {
+    els.lutadorInimigo.classList.remove("is-telegraph-ataque", "is-telegraph-defesa", "is-telegraph-magia");
+    void els.lutadorInimigo.offsetWidth;
+    const cls = acao === "defender"
+      ? "is-telegraph-defesa"
+      : acao === "magia"
+        ? "is-telegraph-magia"
+        : "is-telegraph-ataque";
+    els.lutadorInimigo.classList.add(cls);
+    relatar(textoTelegraph(acao));
+    if (estado.audio) estado.audio.aviso();
+    await esperar(acao === "magia" ? 720 : 580);
+    els.lutadorInimigo.classList.remove(cls);
+  }
+
   async function turnoJogador(acao) {
     if (estado.ocupado || estado.tela !== "luta" || !els.modalFim.hidden) return;
     if (acao === "magia" && estado.jogador.essencia < estado.jogador.magia.custo) {
@@ -1390,8 +1475,9 @@
     setVezInimigo(true);
     pintarHud();
     void els.txtVez.offsetWidth;
-    await esperar(900);
+    await esperar(420);
     const acaoIA = escolherAcaoIA();
+    await telegraphInimigo(acaoIA);
     await resolverAcao("inimigo", acaoIA);
     const recapInimigo = els.relato.textContent;
     if (algumMorreu()) {
@@ -1407,13 +1493,18 @@
     }
     estado.rodada += 1;
     estado.stats.turnos += 1;
-    els.txtVez.textContent = TEXTO.suaVez;
+    els.arena.classList.remove("is-rodada");
+    void els.arena.offsetWidth;
+    els.arena.classList.add("is-rodada");
+    els.txtVez.textContent = TEXTO.suaVezDrama;
     setVezInimigo(false);
     pintarHud();
     relatar(`${recapJogador} · ${recapInimigo}`);
+    if (estado.audio) estado.audio.turno();
     estado.ocupado = false;
     setBotoes(true);
     gravarCampanha();
+    window.setTimeout(() => els.arena.classList.remove("is-rodada"), 480);
   }
 
   function novaCampanha() {

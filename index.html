@@ -10,9 +10,9 @@
   <meta name="apple-mobile-web-app-title" content="LUTA">
   <meta name="mobile-web-app-capable" content="yes">
   <title>LUTA</title>
-  <link rel="icon" href="favicon.svg?v=1.6.2" type="image/svg+xml">
-  <link rel="manifest" href="manifest.webmanifest?v=1.6.2">
-  <link rel="stylesheet" href="css/estilo.css?v=1.6.2">
+  <link rel="icon" href="favicon.svg?v=1.7.0" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest?v=1.7.0">
+  <link rel="stylesheet" href="css/estilo.css?v=1.7.0">
 </head>
 <body>
   <noscript>
@@ -35,8 +35,8 @@
       </div>
       <div class="titulo-art" aria-hidden="true">
         <div class="titulo-art__anel"></div>
-        <div class="titulo-art__nara"><img src="img/nara.webp?v=1.6.2" alt=""></div>
-        <div class="titulo-art__rival"><img src="img/aurenegra.webp?v=1.6.2" alt=""></div>
+        <div class="titulo-art__nara"><img src="img/nara.webp?v=1.7.0" alt=""></div>
+        <div class="titulo-art__rival"><img src="img/aurenegra.webp?v=1.7.0" alt=""></div>
         <ol class="titulo-art__pips">
           <li></li><li></li><li></li><li></li><li class="is-chefe"></li>
           <li></li><li></li><li></li><li class="is-chefe"></li><li class="is-chefe"></li>
@@ -113,7 +113,7 @@
           <div class="lutador__sombra"></div>
           <div class="lutador__guarda" aria-hidden="true"></div>
           <div class="lutador__flash" aria-hidden="true"></div>
-          <img class="lutador__sprite" src="img/nara.webp?v=1.6.2" alt="">
+          <img class="lutador__sprite" src="img/nara.webp?v=1.7.0" alt="">
           <div class="flutuantes" id="flutuantes-jogador"></div>
         </div>
 
@@ -170,13 +170,13 @@
     <div id="modal-tutorial" class="modal" hidden>
       <div class="modal__caixa" role="dialog" aria-modal="true" aria-labelledby="tutorial-titulo">
         <h2 id="tutorial-titulo">Como duelar</h2>
-        <p>São <strong>10 círculos</strong> em sequência. Em cada turno, escolha <strong>exatamente uma</strong> ação:</p>
+        <p class="tutorial-lead">Dez círculos. Um turno. Uma escolha.</p>
         <ul class="tutorial-lista">
-          <li><strong>Atacar</strong> — dano confiável, sem custo.</li>
-          <li><strong>Defender</strong> — reduz o próximo golpe e recupera essência.</li>
-          <li><strong>Magia</strong> — mais forte, mas gasta essência e perfura parte da guarda.</li>
+          <li><strong>Atacar</strong> — dano firme, sem gastar essência.</li>
+          <li><strong>Defender</strong> — aguenta o próximo golpe e recupera essência.</li>
+          <li><strong>Magia</strong> — golpe forte; custa essência e fura parte da guarda.</li>
         </ul>
-        <p>Entre as lutas você descansa e escolhe um reforço. Se cair, pode tentar o mesmo círculo de novo ou recomeçar a campanha.</p>
+        <p>O rival mostra o que vai fazer um instante antes do golpe. Entre lutas, descanse e pegue um reforço.</p>
         <button type="button" id="btn-entendi" class="btn btn--principal">Entendi</button>
       </div>
     </div>
@@ -205,6 +205,6 @@
     </div>
   </div>
 
-  <script src="js/jogo.js?v=1.6.2"></script>
+  <script src="js/jogo.js?v=1.7.0"></script>
 </body>
 </html>
