@@ -1,8 +1,16 @@
-/* LUTA — campanha de 10 círculos (Nara vs rivais originais). Visual 1.4.0. */
+/* LUTA — campanha de 10 círculos (Nara vs rivais originais). Visual 1.8.0 · Three.js arena. */
 (() => {
   "use strict";
 
-  const VERSAO = "1.7.2";
+  function fx3d(nome, ...args) {
+    const api = window.LUTA3D;
+    if (!api || !api.ready || typeof api[nome] !== "function") return;
+    try {
+      api[nome](...args);
+    } catch (_) {}
+  }
+
+  const VERSAO = "1.8.0";
   const CHAVE = "duelo-rapido";
   const TOTAL_CIRCULOS = 10;
 
@@ -233,16 +241,16 @@
   const CAMPANHA = ["liro", "dagro", "velin", "bruma", "korr", "sile", "ravo", "neme", "orvane", "aurenegra"];
 
   const ARTES = {
-    liro: `<img class="lutador__sprite" src="img/liro.webp?v=1.7.2" alt="">`,
-    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=1.7.2" alt="">`,
-    velin: `<img class="lutador__sprite" src="img/velin.webp?v=1.7.2" alt="">`,
-    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=1.7.2" alt="">`,
-    korr: `<img class="lutador__sprite" src="img/korr.webp?v=1.7.2" alt="">`,
-    sile: `<img class="lutador__sprite" src="img/sile.webp?v=1.7.2" alt="">`,
-    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=1.7.2" alt="">`,
-    neme: `<img class="lutador__sprite" src="img/neme.webp?v=1.7.2" alt="">`,
-    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=1.7.2" alt="">`,
-    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=1.7.2" alt="">`,
+    liro: `<img class="lutador__sprite" src="img/liro.webp?v=202609241808" alt="">`,
+    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=202609241808" alt="">`,
+    velin: `<img class="lutador__sprite" src="img/velin.webp?v=202609241808" alt="">`,
+    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=202609241808" alt="">`,
+    korr: `<img class="lutador__sprite" src="img/korr.webp?v=202609241808" alt="">`,
+    sile: `<img class="lutador__sprite" src="img/sile.webp?v=202609241808" alt="">`,
+    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=202609241808" alt="">`,
+    neme: `<img class="lutador__sprite" src="img/neme.webp?v=202609241808" alt="">`,
+    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=202609241808" alt="">`,
+    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=202609241808" alt="">`,
   };
 
   const MELHORIAS = [
@@ -778,6 +786,7 @@
     els.telaTitulo.hidden = nome !== "titulo";
     els.telaLuta.classList.toggle("is-ativa", nome === "luta");
     els.telaLuta.hidden = nome !== "luta";
+    fx3d("setVisible", nome === "luta");
     els.telaDescanso.classList.toggle("is-ativa", nome === "descanso");
     els.telaDescanso.hidden = nome !== "descanso";
   }
@@ -799,6 +808,12 @@
     el.classList.remove(classe);
     void el.offsetWidth;
     el.classList.add(classe);
+    const lado = el === els.lutadorJogador ? "jogador" : el === els.lutadorInimigo ? "inimigo" : null;
+    if (lado) {
+      if (classe === "is-ataque") fx3d("act", lado, "ataque");
+      else if (classe === "is-magia") fx3d("act", lado, "magia");
+      else if (classe === "is-hit") fx3d("hit", lado, {});
+    }
     return esperar(ms).then(() => el.classList.remove(classe));
   }
 
@@ -845,6 +860,7 @@
           : "is-flash-ataque";
     els.arena.classList.add(flash, forte || tipo === "critico" ? "is-treme-forte" : "is-treme");
     soltarFaixas(tipo || "ataque");
+    fx3d("shake", !!forte, tipo || "ataque");
     return esperar(forte || tipo === "critico" ? 460 : 340).then(limparFlashArena);
   }
 
@@ -859,8 +875,8 @@
 
   function precarregarArtes() {
     const base = "img";
-    const urls = [`${base}/nara.webp?v=1.7.2`].concat(
-      Object.keys(ARTES).map((id) => `${base}/${id}.webp?v=1.7.2`)
+    const urls = [`${base}/nara.webp?v=202609241808`].concat(
+      Object.keys(ARTES).map((id) => `${base}/${id}.webp?v=202609241808`)
     );
     urls.forEach((src) => {
       const im = new Image();
@@ -988,6 +1004,8 @@
     els.arena.dataset.tema = rival.tema;
     els.arena.classList.toggle("is-chefe", !!rival.chefe);
     els.placaInimigo.classList.toggle("is-chefe", !!rival.chefe);
+    fx3d("startFight", { id: rival.id, tema: rival.tema, chefe: !!rival.chefe });
+    fx3d("setVisible", true);
   }
 
   async function mostrarEntradaChefe(rival) {
@@ -1162,6 +1180,7 @@
       const ganho = ator.essenciaDefesa;
       ator.essencia = Math.min(ator.essenciaMax, ator.essencia + ganho);
       elAtor.classList.add("is-guarda");
+      fx3d("act", atorChave, "guarda");
       if (estado.audio) {
         estado.audio.defender();
         estado.audio.cura();
@@ -1257,6 +1276,8 @@
       els.fimResumo.textContent = "";
     }
     els.app.classList.toggle("is-vitoria", tipo !== "derrota");
+    if (tipo === "derrota") fx3d("defeat");
+    else fx3d("victory");
     els.app.classList.toggle("is-derrota", tipo === "derrota");
     els.btnRetry.hidden = tipo !== "derrota";
     els.btnReiniciar.hidden = tipo === "campanha";
@@ -1440,6 +1461,7 @@
 
   async function telegraphInimigo(acao) {
     els.lutadorInimigo.classList.remove("is-telegraph-ataque", "is-telegraph-defesa", "is-telegraph-magia");
+    fx3d("telegraph", acao);
     void els.lutadorInimigo.offsetWidth;
     const cls = acao === "defender"
       ? "is-telegraph-defesa"
@@ -1451,6 +1473,7 @@
     if (estado.audio) estado.audio.aviso();
     await esperar(acao === "magia" ? 720 : 580);
     els.lutadorInimigo.classList.remove(cls);
+    fx3d("clearTelegraph");
   }
 
   async function turnoJogador(acao) {

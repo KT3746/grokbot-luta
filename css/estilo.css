@@ -1833,3 +1833,55 @@ button:focus-visible,
     transform: none !important;
   }
 }
+
+/* ——— Arena Three.js ——— */
+.arena__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 0;
+  pointer-events: none;
+}
+.arena--webgl .arena__ceu,
+.arena--webgl .arena__poeira,
+.arena--webgl .arena__chao {
+  opacity: 0;
+  pointer-events: none;
+}
+.arena--webgl .lutador__sprite,
+.arena--webgl .lutador__corpo,
+.arena--webgl .lutador__sombra {
+  opacity: 0 !important;
+}
+.arena--webgl .lutador {
+  z-index: 2;
+  pointer-events: none;
+}
+.arena--webgl .lutador__guarda,
+.arena--webgl .lutador__flash,
+.arena--webgl .flutuantes {
+  opacity: 1;
+  z-index: 3;
+}
+.arena--webgl .arena__flash,
+.arena--webgl .arena__faixas {
+  z-index: 4;
+}
+.arena-webgl-fail {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 5;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font: 600 12px/1.35 system-ui, sans-serif;
+  color: #f2e6d4;
+  background: rgba(20, 10, 18, 0.82);
+  border: 1px solid rgba(232, 195, 106, 0.35);
+  text-align: center;
+  pointer-events: none;
+}
