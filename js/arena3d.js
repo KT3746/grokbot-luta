@@ -1,7 +1,7 @@
 /* LUTA — arena Three.js baixo-poli (ESM). HUD HTML fica por cima. */
 import * as THREE from 'three';
 
-const CACHE_V = '202609241808';
+const CACHE_V = '202609280218';
 const FOG = 0x12101c;
 
 const TEMAS = {
@@ -241,7 +241,7 @@ function setupThree() {
     canvas,
     antialias: false,
     alpha: false,
-    powerPreference: 'high-performance',
+    powerPreference: isLowEnd ? 'low-power' : 'high-performance',
   });
   const dprCap = isLowEnd ? 1.25 : 1.5;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
@@ -276,6 +276,8 @@ function resize() {
   if (!renderer || !canvas || !arenaEl) return;
   const w = Math.max(1, arenaEl.clientWidth);
   const h = Math.max(1, arenaEl.clientHeight);
+  const dprCap = isLowEnd ? 1.25 : 1.5;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   renderer.setSize(w, h, false);
@@ -346,6 +348,11 @@ function updatePoses(dt) {
 
 function frame() {
   raf = requestAnimationFrame(frame);
+  /* Aba oculta: não simula nem renderiza (economiza GPU/bateria). */
+  if (document.hidden) {
+    if (clock) clock.getDelta();
+    return;
+  }
   if (!running || !renderer) return;
   const dt = Math.min(0.05, clock.getDelta());
   idleT += dt;
