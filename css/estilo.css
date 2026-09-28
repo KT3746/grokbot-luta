@@ -1885,3 +1885,74 @@ button:focus-visible,
   text-align: center;
   pointer-events: none;
 }
+
+
+/* Mobile polish: HUD legível em paisagem baixa (~390px de altura) */
+@media (orientation: landscape) and (max-height: 430px) {
+  .tela--luta {
+    padding-top: calc(48px + var(--safe-t));
+    padding-left: calc(8px + var(--safe-l));
+    padding-right: calc(8px + var(--safe-r));
+    gap: 4px;
+  }
+  .campanha-barra { gap: 4px; }
+  .campanha-barra__txt { font-size: 0.72rem; }
+  .hud { gap: 6px; }
+  .placa { padding: 6px 8px; }
+  .placa__nome { font-size: 0.82rem; }
+  .barra__rotulo { font-size: 0.68rem; }
+  .tela--luta .arena {
+    min-height: 120px;
+    height: min(42vh, 180px);
+  }
+  .acoes { gap: 8px; padding-bottom: 2px; }
+  .acao {
+    min-height: 52px;
+    padding: 6px 4px;
+    border-radius: 14px;
+  }
+  .acao__nome { font-size: 0.78rem; }
+  .acao__detalhe { font-size: 0.62rem; }
+  .acao__icone { width: 18px; height: 18px; }
+  .relato {
+    min-height: 2.4em;
+    font-size: 0.78rem;
+  }
+  .btn-som {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 6px 8px;
+  }
+  .modal__caixa {
+    max-height: min(92dvh, 360px);
+    overflow: auto;
+    padding: 12px;
+  }
+}
+
+/* Portrait estreito (~390px): alvos de polegar e HUD compacto */
+@media (orientation: portrait) and (max-width: 430px) {
+  .acao {
+    min-height: 72px;
+    min-width: 0;
+  }
+  .btn,
+  .melhoria,
+  .btn-som {
+    min-height: 44px;
+  }
+  .btn--principal,
+  .btn--fantasma {
+    min-height: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acao:active:not(:disabled),
+  .btn:active,
+  .melhoria:active:not(:disabled),
+  .btn-som:active {
+    transform: none !important;
+    filter: none !important;
+  }
+}

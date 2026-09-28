@@ -1,4 +1,4 @@
-/* LUTA — campanha de 10 círculos (Nara vs rivais originais). Visual 1.8.0 · Three.js arena. */
+/* LUTA — campanha de 10 círculos (Nara vs rivais originais). Visual 1.8.1 · Three.js arena. */
 (() => {
   "use strict";
 
@@ -10,7 +10,8 @@
     } catch (_) {}
   }
 
-  const VERSAO = "1.8.0";
+  const VERSAO = "1.8.1";
+  const CACHE_V = "202609280218";
   const CHAVE = "duelo-rapido";
   const TOTAL_CIRCULOS = 10;
 
@@ -241,16 +242,16 @@
   const CAMPANHA = ["liro", "dagro", "velin", "bruma", "korr", "sile", "ravo", "neme", "orvane", "aurenegra"];
 
   const ARTES = {
-    liro: `<img class="lutador__sprite" src="img/liro.webp?v=202609241808" alt="">`,
-    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=202609241808" alt="">`,
-    velin: `<img class="lutador__sprite" src="img/velin.webp?v=202609241808" alt="">`,
-    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=202609241808" alt="">`,
-    korr: `<img class="lutador__sprite" src="img/korr.webp?v=202609241808" alt="">`,
-    sile: `<img class="lutador__sprite" src="img/sile.webp?v=202609241808" alt="">`,
-    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=202609241808" alt="">`,
-    neme: `<img class="lutador__sprite" src="img/neme.webp?v=202609241808" alt="">`,
-    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=202609241808" alt="">`,
-    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=202609241808" alt="">`,
+    liro: `<img class="lutador__sprite" src="img/liro.webp?v=202609280218" alt="">`,
+    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=202609280218" alt="">`,
+    velin: `<img class="lutador__sprite" src="img/velin.webp?v=202609280218" alt="">`,
+    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=202609280218" alt="">`,
+    korr: `<img class="lutador__sprite" src="img/korr.webp?v=202609280218" alt="">`,
+    sile: `<img class="lutador__sprite" src="img/sile.webp?v=202609280218" alt="">`,
+    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=202609280218" alt="">`,
+    neme: `<img class="lutador__sprite" src="img/neme.webp?v=202609280218" alt="">`,
+    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=202609280218" alt="">`,
+    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=202609280218" alt="">`,
   };
 
   const MELHORIAS = [
@@ -556,7 +557,45 @@
   }
 
   function esperar(ms) {
-    return new Promise((ok) => setTimeout(ok, ms));
+    return new Promise((resolve) => {
+      let remaining = ms;
+      let start = performance.now();
+      let timer = null;
+
+      function clear() {
+        if (timer != null) {
+          clearTimeout(timer);
+          timer = null;
+        }
+      }
+
+      function done() {
+        document.removeEventListener("visibilitychange", onVis);
+        clear();
+        resolve();
+      }
+
+      function schedule() {
+        clear();
+        if (document.hidden) return;
+        start = performance.now();
+        timer = setTimeout(done, remaining);
+      }
+
+      function onVis() {
+        if (document.hidden) {
+          if (timer != null) {
+            remaining = Math.max(0, remaining - (performance.now() - start));
+            clear();
+          }
+        } else {
+          schedule();
+        }
+      }
+
+      document.addEventListener("visibilitychange", onVis);
+      schedule();
+    });
   }
 
   function embaralhar(lista) {
@@ -680,7 +719,20 @@
     return {
       ctx,
       acordar() {
+        if (estado.mudo) return;
         if (ctx.state === "suspended") ctx.resume();
+      },
+      /** Aba oculta: corta o AudioContext pra não vazar som no fundo. */
+      suspend() {
+        if (ctx.state === "running") {
+          try { ctx.suspend(); } catch (_) { /* ok */ }
+        }
+      },
+      resume() {
+        if (estado.mudo) return;
+        if (ctx.state === "suspended") {
+          try { ctx.resume(); } catch (_) { /* ok */ }
+        }
       },
       atacar() {
         const t = agora();
@@ -875,8 +927,8 @@
 
   function precarregarArtes() {
     const base = "img";
-    const urls = [`${base}/nara.webp?v=202609241808`].concat(
-      Object.keys(ARTES).map((id) => `${base}/${id}.webp?v=202609241808`)
+    const urls = [`${base}/nara.webp?v=${CACHE_V}`].concat(
+      Object.keys(ARTES).map((id) => `${base}/${id}.webp?v=${CACHE_V}`)
     );
     urls.forEach((src) => {
       const im = new Image();
@@ -1477,7 +1529,7 @@
   }
 
   async function turnoJogador(acao) {
-    if (estado.ocupado || estado.tela !== "luta" || !els.modalFim.hidden) return;
+    if (document.hidden || estado.ocupado || estado.tela !== "luta" || !els.modalFim.hidden) return;
     if (acao === "magia" && estado.jogador.essencia < estado.jogador.magia.custo) {
       relatar(TEXTO.essenciaCurta);
       return;
@@ -1619,6 +1671,7 @@
 
   function combatePodeReceberAtalho() {
     return estado.tela === "luta"
+      && !document.hidden
       && !estado.ocupado
       && els.modalFim.hidden
       && els.modalTutorial.hidden
@@ -1687,6 +1740,16 @@
       mostrarTela("titulo");
       const foco = els.btnContinuar.hidden ? els.btnComecar : els.btnContinuar;
       foco.focus();
+    });
+    /* Aba/app oculta mid-duelo: suspende áudio; timers (esperar) congelam; 3D não simula. */
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        try { estado.audio && estado.audio.suspend && estado.audio.suspend(); } catch (_) { /* ok */ }
+        return;
+      }
+      try {
+        if (!estado.mudo && estado.audio && estado.audio.resume) estado.audio.resume();
+      } catch (_) { /* ok */ }
     });
     document.addEventListener("keydown", (ev) => {
       if (ev.key === "s" || ev.key === "S") {

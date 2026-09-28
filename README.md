@@ -4,7 +4,7 @@ Jogo de luta em turnos, original, feito para o navegador. Você controla **Nara*
 
 Jogue online: [https://kt3746.github.io/grokbot-luta/](https://kt3746.github.io/grokbot-luta/)
 
-Versão **1.8.0** — arena Three.js baixo-poli (vendor local), HUD HTML intacto; fallback clássico se WebGL falhar. Cache-bust `?v=202609241808`.
+Versão **1.8.1** — polish mobile (aba oculta, áudio, HUD/polegar, DPR). Arena Three.js r160 local; fallback clássico se WebGL falhar. Cache-bust `?v=202609280218`.
 
 ## Como jogar
 
