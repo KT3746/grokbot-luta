@@ -4,7 +4,7 @@ Jogo de luta em turnos, original, feito para o navegador. Você controla **Nara*
 
 Jogue online: [https://kt3746.github.io/grokbot-luta/](https://kt3746.github.io/grokbot-luta/)
 
-Versão **1.8.2** — dica do 1º minuto, juice hit/block (reduced-motion), pause da aba claro, alvos de toque e indicador de turno. Arena Three.js r160 local; fallback clássico se WebGL falhar. Cache-bust `?v=202610012310`.
+Versão **1.8.3** — wave 2: meta suave de vitórias do dia / melhor sequência (localStorage, PT-BR), juice de acerto preciso e Clarão (reduced-motion safe), barras de vida mais legíveis no celular. Arena Three.js r160 local; fallback clássico se WebGL falhar. Cache-bust `?v=202610020146`.
 
 ## Como jogar
 
@@ -20,7 +20,7 @@ Versão **1.8.2** — dica do 1º minuto, juice hit/block (reduced-motion), paus
 
 Se você cair: **Tentar de novo** (mesmo círculo, com os reforços que já tinha) ou **Reiniciar campanha**.
 
-O progresso da campanha e o som ficam salvos neste aparelho (localStorage). Recarregar a página não apaga o meio da campanha. O tutorial **Como duelar** aparece sempre que você toca em **Começar campanha** ou **Nova campanha** (não aparece em **Continuar**).
+O progresso da campanha, o som e a meta suave (vitórias do dia / sequência) ficam salvos neste aparelho (localStorage). Recarregar a página não apaga o meio da campanha. O tutorial **Como duelar** aparece sempre que você toca em **Começar campanha** ou **Nova campanha** (não aparece em **Continuar**).
 
 Atalhos no teclado, **só durante a luta** (não valem no título, no tutorial, no Respiro nem no fim de duelo): `1` / `A` atacar, `2` / `D` defender, `3` / `M` magia, `S` som. No Respiro, use o toque ou Enter/Espaço no reforço escolhido.
 

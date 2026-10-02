@@ -1,4 +1,4 @@
-/* LUTA — campanha de 10 círculos (Nara vs rivais originais). Visual 1.8.2 · Three.js arena. */
+/* LUTA — campanha de 10 círculos (Nara vs rivais originais). Visual 1.8.3 · Three.js arena. */
 (() => {
   "use strict";
 
@@ -10,8 +10,8 @@
     } catch (_) {}
   }
 
-  const VERSAO = "1.8.2";
-  const CACHE_V = "202610012310";
+  const VERSAO = "1.8.3";
+  const CACHE_V = "202610020146";
   const CHAVE = "duelo-rapido";
   const TOTAL_CIRCULOS = 10;
 
@@ -64,6 +64,12 @@
     proximoChefe: "Próximo chefe",
     proximoFinal: "Chefe final",
     continuar: (n) => `Continuar · Círculo ${n}/10`,
+    metaHojeZero: "Hoje: ainda sem vitória de círculo",
+    metaHoje: (n) => (n === 1 ? "Hoje: 1 círculo" : `Hoje: ${n} círculos`),
+    metaSeq: (n) => `Sequência: ${n}`,
+    metaMelhor: (n) => `Melhor sequência: ${n}`,
+    seloCritico: "Acerto preciso!",
+    seloMagia: "Clarão!",
   };
 
   const NARA = {
@@ -244,16 +250,16 @@
   const CAMPANHA = ["liro", "dagro", "velin", "bruma", "korr", "sile", "ravo", "neme", "orvane", "aurenegra"];
 
   const ARTES = {
-    liro: `<img class="lutador__sprite" src="img/liro.webp?v=202609280218" alt="">`,
-    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=202609280218" alt="">`,
-    velin: `<img class="lutador__sprite" src="img/velin.webp?v=202609280218" alt="">`,
-    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=202609280218" alt="">`,
-    korr: `<img class="lutador__sprite" src="img/korr.webp?v=202609280218" alt="">`,
-    sile: `<img class="lutador__sprite" src="img/sile.webp?v=202609280218" alt="">`,
-    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=202609280218" alt="">`,
-    neme: `<img class="lutador__sprite" src="img/neme.webp?v=202609280218" alt="">`,
-    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=202609280218" alt="">`,
-    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=202609280218" alt="">`,
+    liro: `<img class="lutador__sprite" src="img/liro.webp?v=${CACHE_V}" alt="">`,
+    dagro: `<img class="lutador__sprite" src="img/dagro.webp?v=${CACHE_V}" alt="">`,
+    velin: `<img class="lutador__sprite" src="img/velin.webp?v=${CACHE_V}" alt="">`,
+    bruma: `<img class="lutador__sprite" src="img/bruma.webp?v=${CACHE_V}" alt="">`,
+    korr: `<img class="lutador__sprite" src="img/korr.webp?v=${CACHE_V}" alt="">`,
+    sile: `<img class="lutador__sprite" src="img/sile.webp?v=${CACHE_V}" alt="">`,
+    ravo: `<img class="lutador__sprite" src="img/ravo.webp?v=${CACHE_V}" alt="">`,
+    neme: `<img class="lutador__sprite" src="img/neme.webp?v=${CACHE_V}" alt="">`,
+    orvane: `<img class="lutador__sprite" src="img/orvane.webp?v=${CACHE_V}" alt="">`,
+    aurenegra: `<img class="lutador__sprite" src="img/aurenegra.webp?v=${CACHE_V}" alt="">`,
   };
 
   const MELHORIAS = [
@@ -471,6 +477,76 @@
 
   function resetStats() {
     estado.stats = { turnos: 0, danoFeito: 0, danoTomado: 0, circulos: 0 };
+  }
+
+  function diaBRT() {
+    try {
+      return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+    } catch (_) {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+  }
+
+  function lerMeta() {
+    const hoje = diaBRT();
+    const padrao = { dia: hoje, vitoriasHoje: 0, sequencia: 0, melhorSequencia: 0 };
+    try {
+      const bruto = localStorage.getItem(`${CHAVE}:meta`);
+      if (!bruto) return padrao;
+      const m = JSON.parse(bruto);
+      const seq = m.sequencia | 0;
+      const melhor = Math.max(m.melhorSequencia | 0, seq);
+      if (m.dia !== hoje) {
+        return { dia: hoje, vitoriasHoje: 0, sequencia: seq, melhorSequencia: melhor };
+      }
+      return {
+        dia: hoje,
+        vitoriasHoje: m.vitoriasHoje | 0,
+        sequencia: seq,
+        melhorSequencia: melhor,
+      };
+    } catch (_) {
+      return padrao;
+    }
+  }
+
+  function gravarMeta(m) {
+    try {
+      localStorage.setItem(`${CHAVE}:meta`, JSON.stringify(m));
+    } catch (_) {}
+  }
+
+  function pintarTituloMeta() {
+    const el = document.getElementById("titulo-meta");
+    if (!el) return;
+    const m = lerMeta();
+    const partes = [];
+    partes.push(m.vitoriasHoje > 0 ? TEXTO.metaHoje(m.vitoriasHoje) : TEXTO.metaHojeZero);
+    if (m.sequencia > 0) partes.push(TEXTO.metaSeq(m.sequencia));
+    if (m.melhorSequencia > 0) partes.push(TEXTO.metaMelhor(m.melhorSequencia));
+    el.textContent = partes.join(" · ");
+  }
+
+  function registrarVitoriaCirculo() {
+    const m = lerMeta();
+    m.dia = diaBRT();
+    m.vitoriasHoje = (m.vitoriasHoje | 0) + 1;
+    m.sequencia = (m.sequencia | 0) + 1;
+    m.melhorSequencia = Math.max(m.melhorSequencia | 0, m.sequencia);
+    gravarMeta(m);
+    pintarTituloMeta();
+  }
+
+  function registrarDerrotaMeta() {
+    const m = lerMeta();
+    m.dia = diaBRT();
+    m.sequencia = 0;
+    gravarMeta(m);
+    pintarTituloMeta();
   }
 
   function lerFlag(nome, padrao) {
@@ -895,7 +971,7 @@
     setTimeout(() => no.remove(), 1500);
   }
 
-  function animar(el, classe, ms) {
+  function animar(el, classe, ms, opts) {
     el.classList.remove(classe);
     void el.offsetWidth;
     el.classList.add(classe);
@@ -903,9 +979,26 @@
     if (lado) {
       if (classe === "is-ataque") fx3d("act", lado, "ataque");
       else if (classe === "is-magia") fx3d("act", lado, "magia");
-      else if (classe === "is-hit") fx3d("hit", lado, {});
+      else if (classe === "is-hit") fx3d("hit", lado, opts || {});
     }
     return esperar(ms).then(() => el.classList.remove(classe));
+  }
+
+  function mostrarSeloJuice(texto, tipo) {
+    const el = document.getElementById("arena-selo-juice");
+    if (!el) return;
+    el.hidden = false;
+    el.textContent = texto;
+    el.className = `arena__selo-juice is-${tipo || "critico"}`;
+    el.setAttribute("aria-hidden", "false");
+    window.clearTimeout(mostrarSeloJuice._t);
+    const ms = prefersReduced() ? 520 : 720;
+    mostrarSeloJuice._t = window.setTimeout(() => {
+      el.hidden = true;
+      el.textContent = "";
+      el.className = "arena__selo-juice";
+      el.setAttribute("aria-hidden", "true");
+    }, ms);
   }
 
   function limparFlashArena() {
@@ -942,11 +1035,22 @@
   function tremerArena(forte, tipo) {
     limparFlashArena();
     if (prefersReduced()) {
-      // Juice mínimo sem shake: só marca tipo no dataset pra feedback estático
+      // Juice mínimo sem shake: outline/tipo estático (sem tremor)
       els.arena.dataset.juice = tipo || "ataque";
-      fx3d("shake", false, tipo || "ataque"); // arena3d também respeita reduced
-      return esperar(120).then(() => {
+      els.app.classList.remove("is-juice-hit", "is-juice-block", "is-juice-crit", "is-juice-magia");
+      const juiceCls =
+        tipo === "guarda"
+          ? "is-juice-block"
+          : tipo === "critico"
+            ? "is-juice-crit"
+            : tipo === "magia"
+              ? "is-juice-magia"
+              : "is-juice-hit";
+      els.app.classList.add(juiceCls);
+      fx3d("shake", false, tipo || "ataque");
+      return esperar(180).then(() => {
         delete els.arena.dataset.juice;
+        els.app.classList.remove("is-juice-hit", "is-juice-block", "is-juice-crit", "is-juice-magia");
         limparFlashArena();
       });
     }
@@ -961,10 +1065,21 @@
     const treme = forte || tipo === "critico" ? "is-treme-forte" : "is-treme";
     els.arena.classList.add(flash, treme);
     // Extra juice: tela/hit ring no app
-    els.app.classList.remove("is-juice-hit", "is-juice-block");
+    els.app.classList.remove("is-juice-hit", "is-juice-block", "is-juice-crit", "is-juice-magia");
     void els.app.offsetWidth;
-    els.app.classList.add(tipo === "guarda" ? "is-juice-block" : "is-juice-hit");
-    window.setTimeout(() => els.app.classList.remove("is-juice-hit", "is-juice-block"), 320);
+    const juiceCls =
+      tipo === "guarda"
+        ? "is-juice-block"
+        : tipo === "critico"
+          ? "is-juice-crit"
+          : tipo === "magia"
+            ? "is-juice-magia"
+            : "is-juice-hit";
+    els.app.classList.add(juiceCls);
+    window.setTimeout(
+      () => els.app.classList.remove("is-juice-hit", "is-juice-block", "is-juice-crit", "is-juice-magia"),
+      tipo === "critico" || tipo === "magia" ? 420 : 320
+    );
     soltarFaixas(tipo || "ataque");
     fx3d("shake", !!forte, tipo || "ataque");
     return esperar(forte || tipo === "critico" ? 460 : 340).then(limparFlashArena);
@@ -1340,7 +1455,11 @@
         relatar(`${TEXTO.inimigoMagia(ator.nome, ator.magia.nome, resultado.dano)}${extra}`);
       }
       pintarHud();
-      const hit = animar(elAlvo, "is-hit", ator.chefe ? 560 : 460);
+      if (!resultado.bloqueado) mostrarSeloJuice(TEXTO.seloMagia, "magia");
+      const hit = animar(elAlvo, "is-hit", ator.chefe ? 560 : 460, {
+        tipo: "magia",
+        forte: !!ator.chefe,
+      });
       const treme = tremerArena(!!ator.chefe, resultado.bloqueado ? "guarda" : "magia");
       await Promise.all([hit, treme]);
       return;
@@ -1371,8 +1490,13 @@
     if (resultado.bloqueado) partes.push(TEXTO.escudoAbsorveu);
     relatar(partes.join(" "));
     pintarHud();
-    const hit = animar(elAlvo, "is-hit", critico || ator.chefe ? 540 : 420);
     const tipoFlash = critico ? "critico" : resultado.bloqueado ? "guarda" : "ataque";
+    if (critico) mostrarSeloJuice(TEXTO.seloCritico, "critico");
+    const hit = animar(elAlvo, "is-hit", critico || ator.chefe ? 540 : 420, {
+      critico: !!critico,
+      tipo: tipoFlash,
+      forte: !!(critico || ator.chefe),
+    });
     const treme = tremerArena(!!(critico || ator.chefe), tipoFlash);
     await Promise.all([hit, treme]);
   }
@@ -1419,6 +1543,7 @@
       if (estado.circulo >= TOTAL_CIRCULOS - 1) {
         estado.stats.circulos = TOTAL_CIRCULOS;
         estado.fase = "concluida";
+        registrarVitoriaCirculo();
         gravarCampanha();
         els.fimSelo.textContent = TEXTO.fimSeloCampanha;
         els.fimTitulo.textContent = TEXTO.campanhaVencida;
@@ -1436,6 +1561,7 @@
     els.lutadorJogador.classList.add("is-cair");
     if (estado.audio) estado.audio.derrota();
     estado.fase = "luta";
+    registrarDerrotaMeta();
     gravarCampanha();
     els.fimSelo.textContent = TEXTO.fimSeloLose;
     els.fimTitulo.textContent = TEXTO.derrota;
@@ -1533,6 +1659,7 @@
     descansoCuraLeve();
     estado.stats.circulos += 1;
     estado.circulo += 1;
+    registrarVitoriaCirculo();
     estado.fase = "descanso";
     estado.melhorias = sortearMelhorias(estado.jogador);
     estado.ocupado = false;
@@ -1680,6 +1807,7 @@
   }
 
   function atualizarTituloBotoes() {
+    pintarTituloMeta();
     const save = lerCampanha();
     const ativa = save && save.jogador && !save.concluida;
     els.btnContinuar.hidden = !ativa;
@@ -1853,6 +1981,7 @@
     precarregarArtes();
     atualizarSomUi();
     atualizarTituloBotoes();
+    pintarTituloMeta();
     mostrarTela("titulo");
     ligarEventos();
     document.title = TEXTO.titulo;
