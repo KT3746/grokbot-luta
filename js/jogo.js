@@ -1,4 +1,4 @@
-/* LUTA — campanha de 10 círculos (Nara vs rivais originais). Visual 1.8.1 · Three.js arena. */
+/* LUTA — campanha de 10 círculos (Nara vs rivais originais). Visual 1.8.2 · Three.js arena. */
 (() => {
   "use strict";
 
@@ -10,8 +10,8 @@
     } catch (_) {}
   }
 
-  const VERSAO = "1.8.1";
-  const CACHE_V = "202609280218";
+  const VERSAO = "1.8.2";
+  const CACHE_V = "202610012310";
   const CHAVE = "duelo-rapido";
   const TOTAL_CIRCULOS = 10;
 
@@ -48,6 +48,8 @@
     fimSeloCampanha: "Dez círculos",
     inicioRelato: (titulo, nota) => `${titulo} entra no círculo. ${nota} Escolha o primeiro golpe.`,
     suaVezCurta: "Sua vez — uma ação.",
+    dicaMinuto: "Primeiro minuto: Atacar, Defender ou Magia. Some ao primeiro toque.",
+    pausadoAba: "Pausado — volte a esta aba para continuar.",
     som: "Som",
     mudo: "Mudo",
     rival: "Rival",
@@ -444,6 +446,8 @@
     proximoNome: document.getElementById("proximo-nome"),
     proximoNota: document.getElementById("proximo-nota"),
     melhorias: document.getElementById("melhorias"),
+    dicaMinuto: document.getElementById("dica-minuto"),
+    pausaVis: document.getElementById("pausa-visibilidade"),
   };
 
   const estado = {
@@ -451,6 +455,7 @@
     ocupado: false,
     mudo: lerFlag("mudo", false),
     viuTutorial: lerFlag("tutorial", false),
+    viuDicaMinuto: lerFlag("dica-minuto", false),
     circulo: 0,
     fase: "titulo",
     rodada: 1,
@@ -596,6 +601,39 @@
       document.addEventListener("visibilitychange", onVis);
       schedule();
     });
+  }
+
+
+  const prefersReduced = () =>
+    window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function mostrarDicaMinuto() {
+    if (!els.dicaMinuto || estado.viuDicaMinuto) return;
+    els.dicaMinuto.hidden = false;
+    els.telaLuta.classList.add("is-dica-minuto");
+  }
+
+  function dispensarDicaMinuto() {
+    if (!els.dicaMinuto || estado.viuDicaMinuto) {
+      if (els.dicaMinuto) els.dicaMinuto.hidden = true;
+      els.telaLuta.classList.remove("is-dica-minuto");
+      return;
+    }
+    estado.viuDicaMinuto = true;
+    gravarFlag("dica-minuto", true);
+    els.dicaMinuto.hidden = true;
+    els.telaLuta.classList.remove("is-dica-minuto");
+  }
+
+  function setPausaVisibilidade(pausado) {
+    if (!els.pausaVis) return;
+    const show = !!pausado && estado.tela === "luta";
+    els.pausaVis.hidden = !show;
+    els.app.classList.toggle("is-pausado-aba", show);
+    if (show && els.pausaVis.querySelector(".pausa-visibilidade__txt")) {
+      els.pausaVis.querySelector(".pausa-visibilidade__txt").innerHTML =
+        "<strong>Pausado</strong> — volte a esta aba para continuar o duelo.";
+    }
   }
 
   function embaralhar(lista) {
@@ -838,6 +876,7 @@
     els.telaTitulo.hidden = nome !== "titulo";
     els.telaLuta.classList.toggle("is-ativa", nome === "luta");
     els.telaLuta.hidden = nome !== "luta";
+    if (nome !== "luta") setPausaVisibilidade(false);
     fx3d("setVisible", nome === "luta");
     els.telaDescanso.classList.toggle("is-ativa", nome === "descanso");
     els.telaDescanso.hidden = nome !== "descanso";
@@ -882,7 +921,7 @@
   }
 
   function soltarFaixas(tipo) {
-    if (!els.arenaFaixas) return;
+    if (!els.arenaFaixas || prefersReduced()) return;
     const caixa = els.arenaFaixas;
     caixa.innerHTML = "";
     const n = tipo === "critico" ? 14 : tipo === "magia" ? 10 : 7;
@@ -902,6 +941,15 @@
 
   function tremerArena(forte, tipo) {
     limparFlashArena();
+    if (prefersReduced()) {
+      // Juice mínimo sem shake: só marca tipo no dataset pra feedback estático
+      els.arena.dataset.juice = tipo || "ataque";
+      fx3d("shake", false, tipo || "ataque"); // arena3d também respeita reduced
+      return esperar(120).then(() => {
+        delete els.arena.dataset.juice;
+        limparFlashArena();
+      });
+    }
     void els.arena.offsetWidth;
     const flash = tipo === "magia"
       ? "is-flash-magia"
@@ -910,7 +958,13 @@
         : tipo === "guarda"
           ? "is-flash-guarda"
           : "is-flash-ataque";
-    els.arena.classList.add(flash, forte || tipo === "critico" ? "is-treme-forte" : "is-treme");
+    const treme = forte || tipo === "critico" ? "is-treme-forte" : "is-treme";
+    els.arena.classList.add(flash, treme);
+    // Extra juice: tela/hit ring no app
+    els.app.classList.remove("is-juice-hit", "is-juice-block");
+    void els.app.offsetWidth;
+    els.app.classList.add(tipo === "guarda" ? "is-juice-block" : "is-juice-hit");
+    window.setTimeout(() => els.app.classList.remove("is-juice-hit", "is-juice-block"), 320);
     soltarFaixas(tipo || "ataque");
     fx3d("shake", !!forte, tipo || "ataque");
     return esperar(forte || tipo === "critico" ? 460 : 340).then(limparFlashArena);
@@ -1033,10 +1087,17 @@
     els.btnMagia.disabled = !magiaOk;
     els.acoes.setAttribute("aria-disabled", ativos ? "false" : "true");
     els.telaLuta.classList.toggle("is-sua-vez", !!ativos);
+    if (els.txtVez) {
+      els.txtVez.classList.toggle("is-destaque-vez", !!ativos);
+    }
   }
 
   function setVezInimigo(aguardando) {
     els.telaLuta.classList.toggle("is-vez-inimigo", aguardando);
+    if (els.txtVez) {
+      els.txtVez.classList.toggle("is-vez-rival", !!aguardando);
+      els.txtVez.classList.toggle("is-destaque-vez", !aguardando && !estado.ocupado);
+    }
   }
 
   function relatar(msg) {
@@ -1095,6 +1156,7 @@
     if (els.modalChefe) els.modalChefe.hidden = true;
     prepararRivalVisual(rival);
     mostrarTela("luta");
+    mostrarDicaMinuto();
     pintarHud();
     els.txtVez.textContent = TEXTO.suaVez;
     setVezInimigo(false);
@@ -1534,6 +1596,7 @@
       relatar(TEXTO.essenciaCurta);
       return;
     }
+    dispensarDicaMinuto();
     estado.ocupado = true;
     setBotoes(false);
     els.txtVez.textContent = TEXTO.resolvendo;
@@ -1745,8 +1808,10 @@
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         try { estado.audio && estado.audio.suspend && estado.audio.suspend(); } catch (_) { /* ok */ }
+        setPausaVisibilidade(true);
         return;
       }
+      setPausaVisibilidade(false);
       try {
         if (!estado.mudo && estado.audio && estado.audio.resume) estado.audio.resume();
       } catch (_) { /* ok */ }

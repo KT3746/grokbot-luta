@@ -420,6 +420,10 @@ button:focus-visible {
   align-self: center;
   text-align: center;
   min-width: 88px;
+  padding: 6px 8px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .centro-turno__rodada,
@@ -1954,5 +1958,117 @@ button:focus-visible,
   .btn-som:active {
     transform: none !important;
     filter: none !important;
+  }
+}
+
+
+/* ——— 1.8.2 polish: dica do 1º minuto, pause aba, juice, turn, touch ——— */
+.dica-minuto {
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(232, 195, 106, 0.18), rgba(20, 28, 48, 0.92));
+  border: 1px solid rgba(232, 195, 106, 0.45);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+  color: #f3ead8;
+  font-size: 0.86rem;
+  line-height: 1.35;
+  text-align: center;
+}
+.dica-minuto__txt { margin: 0; }
+.dica-minuto__txt strong { color: #ffe8a8; }
+.dica-minuto__txt em { font-style: normal; color: #9fd6ff; font-weight: 700; }
+.tela--luta.is-dica-minuto .acoes { outline: 1px dashed rgba(232, 195, 106, 0.35); outline-offset: 4px; border-radius: 16px; }
+
+.pausa-visibilidade {
+  position: sticky;
+  top: calc(8px + var(--safe-t, 0px));
+  z-index: 40;
+  margin: 0 0 6px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(12, 16, 28, 0.94);
+  border: 1px solid rgba(255, 160, 90, 0.55);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  text-align: center;
+}
+.pausa-visibilidade__txt {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #ffe0c0;
+  letter-spacing: 0.01em;
+}
+.pausa-visibilidade__txt strong { color: #ffb070; }
+.app.is-pausado-aba .tela--luta {
+  filter: saturate(0.72) brightness(0.88);
+}
+.app.is-pausado-aba .acoes { pointer-events: none; opacity: 0.55; }
+
+/* Juice hit/block (JS adiciona; CSS reduz se prefers-reduced-motion) */
+.app.is-juice-hit .arena {
+  box-shadow: 0 0 0 2px rgba(255, 120, 80, 0.55), 0 0 28px rgba(255, 90, 60, 0.35);
+}
+.app.is-juice-block .arena {
+  box-shadow: 0 0 0 2px rgba(110, 220, 200, 0.55), 0 0 24px rgba(90, 200, 180, 0.3);
+}
+.app.is-juice-hit .lutador.is-hit .lutador__flash,
+.app.is-juice-block .lutador.is-guarda .lutador__flash {
+  opacity: 1;
+}
+
+/* Turn indicator polish */
+.centro-turno__vez.is-destaque-vez {
+  color: #ffe8a8;
+  text-shadow: 0 0 14px rgba(232, 195, 106, 0.55);
+  animation: vez-pulso 1.6s ease-in-out infinite;
+}
+.centro-turno__vez.is-vez-rival {
+  color: #ffb0a0;
+  text-shadow: 0 0 12px rgba(255, 120, 90, 0.4);
+  animation: none;
+}
+.tela--luta.is-sua-vez .centro-turno {
+  border-color: rgba(232, 195, 106, 0.45);
+  box-shadow: 0 0 16px rgba(232, 195, 106, 0.18);
+}
+.tela--luta.is-vez-inimigo .centro-turno {
+  border-color: rgba(255, 120, 90, 0.4);
+  box-shadow: 0 0 14px rgba(255, 100, 70, 0.16);
+}
+@keyframes vez-pulso {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.88; transform: scale(1.03); }
+}
+
+/* Touch targets: landscape baixa não pode ficar < 56px */
+@media (orientation: landscape) and (max-height: 430px) {
+  .acao {
+    min-height: 56px;
+    min-width: 72px;
+    padding: 8px 6px;
+  }
+  .btn-som {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+@media (orientation: portrait) and (max-width: 430px) {
+  .acao {
+    min-height: 76px;
+    padding: 10px 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .centro-turno__vez.is-destaque-vez,
+  .app.is-juice-hit .arena,
+  .app.is-juice-block .arena {
+    animation: none !important;
+    box-shadow: none;
+  }
+  .app.is-juice-hit .arena,
+  .app.is-juice-block .arena {
+    outline: 2px solid rgba(232, 195, 106, 0.55);
+    outline-offset: 2px;
   }
 }
