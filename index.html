@@ -10,13 +10,13 @@
   <meta name="apple-mobile-web-app-title" content="LUTA">
   <meta name="mobile-web-app-capable" content="yes">
   <title>LUTA</title>
-  <link rel="icon" href="favicon.svg?v=202610012310" type="image/svg+xml">
-  <link rel="manifest" href="manifest.webmanifest?v=202610012310">
-  <link rel="stylesheet" href="css/estilo.css?v=202610012310">
+  <link rel="icon" href="favicon.svg?v=202610020146" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest?v=202610020146">
+  <link rel="stylesheet" href="css/estilo.css?v=202610020146">
   <script type="importmap">
   {
     "imports": {
-      "three": "./js/vendor/three.module.js?v=202610012310"
+      "three": "./js/vendor/three.module.js?v=202610020146"
     }
   }
   </script>
@@ -42,14 +42,15 @@
       </div>
       <div class="titulo-art" aria-hidden="true">
         <div class="titulo-art__anel"></div>
-        <div class="titulo-art__nara"><img src="img/nara.webp?v=202610012310" alt=""></div>
-        <div class="titulo-art__rival"><img src="img/aurenegra.webp?v=202610012310" alt=""></div>
+        <div class="titulo-art__nara"><img src="img/nara.webp?v=202610020146" alt=""></div>
+        <div class="titulo-art__rival"><img src="img/aurenegra.webp?v=202610020146" alt=""></div>
         <ol class="titulo-art__pips">
           <li></li><li></li><li></li><li></li><li class="is-chefe"></li>
           <li></li><li></li><li></li><li class="is-chefe"></li><li class="is-chefe"></li>
         </ol>
       </div>
       <p class="titulo-intro">Você é <strong>Nara</strong>. Cruze dez círculos, descanse entre as lutas e escolha reforços. No fim espera um chefe.</p>
+      <p class="titulo-meta" id="titulo-meta" aria-live="polite"></p>
       <div class="titulo-acoes">
         <button type="button" id="btn-continuar" class="btn btn--principal" hidden>Continuar campanha</button>
         <button type="button" id="btn-comecar" class="btn btn--principal">Começar campanha</button>
@@ -120,12 +121,13 @@
         <div class="arena__chao"></div>
         <div class="arena__flash" id="arena-flash" aria-hidden="true"></div>
         <div class="arena__faixas" id="arena-faixas" aria-hidden="true"></div>
+        <div class="arena__selo-juice" id="arena-selo-juice" hidden aria-hidden="true"></div>
 
         <div class="lutador lutador--nara" id="lutador-jogador" data-lado="aliado">
           <div class="lutador__sombra"></div>
           <div class="lutador__guarda" aria-hidden="true"></div>
           <div class="lutador__flash" aria-hidden="true"></div>
-          <img class="lutador__sprite" src="img/nara.webp?v=202610012310" alt="">
+          <img class="lutador__sprite" src="img/nara.webp?v=202610020146" alt="">
           <div class="flutuantes" id="flutuantes-jogador"></div>
         </div>
 
@@ -221,7 +223,7 @@
     </div>
   </div>
 
-  <script type="module" src="js/arena3d.js?v=202610012310"></script>
-  <script defer src="js/jogo.js?v=202610012310"></script>
+  <script type="module" src="js/arena3d.js?v=202610020146"></script>
+  <script defer src="js/jogo.js?v=202610020146"></script>
 </body>
 </html>
