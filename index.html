@@ -10,13 +10,13 @@
   <meta name="apple-mobile-web-app-title" content="LUTA">
   <meta name="mobile-web-app-capable" content="yes">
   <title>LUTA</title>
-  <link rel="icon" href="favicon.svg?v=202609280218" type="image/svg+xml">
-  <link rel="manifest" href="manifest.webmanifest?v=202609280218">
-  <link rel="stylesheet" href="css/estilo.css?v=202609280218">
+  <link rel="icon" href="favicon.svg?v=202610012310" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest?v=202610012310">
+  <link rel="stylesheet" href="css/estilo.css?v=202610012310">
   <script type="importmap">
   {
     "imports": {
-      "three": "./js/vendor/three.module.js?v=202609280218"
+      "three": "./js/vendor/three.module.js?v=202610012310"
     }
   }
   </script>
@@ -42,8 +42,8 @@
       </div>
       <div class="titulo-art" aria-hidden="true">
         <div class="titulo-art__anel"></div>
-        <div class="titulo-art__nara"><img src="img/nara.webp?v=202609280218" alt=""></div>
-        <div class="titulo-art__rival"><img src="img/aurenegra.webp?v=202609280218" alt=""></div>
+        <div class="titulo-art__nara"><img src="img/nara.webp?v=202610012310" alt=""></div>
+        <div class="titulo-art__rival"><img src="img/aurenegra.webp?v=202610012310" alt=""></div>
         <ol class="titulo-art__pips">
           <li></li><li></li><li></li><li></li><li class="is-chefe"></li>
           <li></li><li></li><li></li><li class="is-chefe"></li><li class="is-chefe"></li>
@@ -62,6 +62,10 @@
       <div class="campanha-barra">
         <p class="campanha-barra__txt" id="txt-circulo">Círculo 1/10</p>
         <ol class="pips" id="pips" aria-hidden="true"></ol>
+      </div>
+
+      <div id="pausa-visibilidade" class="pausa-visibilidade" hidden role="status" aria-live="assertive">
+        <p class="pausa-visibilidade__txt"><strong>Pausado</strong> — volte a esta aba para continuar o duelo.</p>
       </div>
 
       <header class="hud">
@@ -121,7 +125,7 @@
           <div class="lutador__sombra"></div>
           <div class="lutador__guarda" aria-hidden="true"></div>
           <div class="lutador__flash" aria-hidden="true"></div>
-          <img class="lutador__sprite" src="img/nara.webp?v=202609280218" alt="">
+          <img class="lutador__sprite" src="img/nara.webp?v=202610012310" alt="">
           <div class="flutuantes" id="flutuantes-jogador"></div>
         </div>
 
@@ -135,6 +139,10 @@
       </div>
 
       <p class="relato" id="relato" aria-live="polite">O círculo se fecha. Escolha o primeiro golpe.</p>
+
+      <div id="dica-minuto" class="dica-minuto" hidden role="status" aria-live="polite">
+        <p class="dica-minuto__txt"><strong>Primeiro minuto:</strong> escolha <em>Atacar</em>, <em>Defender</em> ou <em>Magia</em>. Some ao primeiro toque.</p>
+      </div>
 
       <div class="acoes" id="acoes">
         <button type="button" class="acao" data-acao="atacar" id="btn-atacar" aria-label="Atacar">
@@ -213,7 +221,7 @@
     </div>
   </div>
 
-  <script type="module" src="js/arena3d.js?v=202609280218"></script>
-  <script defer src="js/jogo.js?v=202609280218"></script>
+  <script type="module" src="js/arena3d.js?v=202610012310"></script>
+  <script defer src="js/jogo.js?v=202610012310"></script>
 </body>
 </html>

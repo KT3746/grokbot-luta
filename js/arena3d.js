@@ -519,7 +519,13 @@ api.hit = function hit(side, opts = {}) {
   setPose(side, 'hit');
   const root = side === 'jogador' || side === 'nara' ? naraRoot : rivalRoot;
   const color = opts.critico ? 0xffe08a : opts.tipo === 'magia' ? 0xb08cff : 0xff8060;
-  if (root) spawnBurst(root.position.x, 1.3, root.position.z, color, opts.critico ? 16 : 10, 3.2);
+  if (root && !reducedMotion) spawnBurst(root.position.x, 1.3, root.position.z, color, opts.critico ? 16 : 10, 3.2);
+  if (reducedMotion) {
+    flashColor = color;
+    flashT = 0.12;
+    shake = 0;
+    return;
+  }
   shake = opts.critico || opts.forte ? 0.45 : 0.22;
   flashColor = color;
   flashT = 0.28;
@@ -538,8 +544,13 @@ api.clearTelegraph = function clearTelegraph() {
 
 api.shake = function shakeCam(forte, tipo) {
   if (!api.ready) return;
-  shake = forte || tipo === 'critico' ? 0.5 : 0.28;
   flashColor = tipo === 'magia' ? 0xb08cff : tipo === 'critico' ? 0xffe08a : tipo === 'guarda' ? 0x7ee0d0 : 0xff8060;
+  if (reducedMotion) {
+    shake = 0;
+    flashT = 0.1;
+    return;
+  }
+  shake = forte || tipo === 'critico' ? 0.5 : 0.28;
   flashT = 0.28;
 };
 
