@@ -10,13 +10,13 @@
   <meta name="apple-mobile-web-app-title" content="LUTA">
   <meta name="mobile-web-app-capable" content="yes">
   <title>LUTA</title>
-  <link rel="icon" href="favicon.svg?v=202610020146" type="image/svg+xml">
-  <link rel="manifest" href="manifest.webmanifest?v=202610020146">
-  <link rel="stylesheet" href="css/estilo.css?v=202610020146">
+  <link rel="icon" href="favicon.svg?v=202610052040" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest?v=202610052040">
+  <link rel="stylesheet" href="css/estilo.css?v=202610052040">
   <script type="importmap">
   {
     "imports": {
-      "three": "./js/vendor/three.module.js?v=202610020146"
+      "three": "./js/vendor/three.module.js?v=202610052040"
     }
   }
   </script>
@@ -42,8 +42,8 @@
       </div>
       <div class="titulo-art" aria-hidden="true">
         <div class="titulo-art__anel"></div>
-        <div class="titulo-art__nara"><img src="img/nara.webp?v=202610020146" alt=""></div>
-        <div class="titulo-art__rival"><img src="img/aurenegra.webp?v=202610020146" alt=""></div>
+        <div class="titulo-art__nara"><img src="img/nara.webp?v=202610052040" alt=""></div>
+        <div class="titulo-art__rival"><img src="img/aurenegra.webp?v=202610052040" alt=""></div>
         <ol class="titulo-art__pips">
           <li></li><li></li><li></li><li></li><li class="is-chefe"></li>
           <li></li><li></li><li></li><li class="is-chefe"></li><li class="is-chefe"></li>
@@ -122,12 +122,16 @@
         <div class="arena__flash" id="arena-flash" aria-hidden="true"></div>
         <div class="arena__faixas" id="arena-faixas" aria-hidden="true"></div>
         <div class="arena__selo-juice" id="arena-selo-juice" hidden aria-hidden="true"></div>
+        <div class="arena__ko" id="arena-ko" hidden role="status" aria-live="assertive">
+          <strong class="arena__ko-titulo" id="arena-ko-titulo">K.O.!</strong>
+          <span class="arena__ko-sub" id="arena-ko-sub"></span>
+        </div>
 
         <div class="lutador lutador--nara" id="lutador-jogador" data-lado="aliado">
           <div class="lutador__sombra"></div>
           <div class="lutador__guarda" aria-hidden="true"></div>
           <div class="lutador__flash" aria-hidden="true"></div>
-          <img class="lutador__sprite" src="img/nara.webp?v=202610020146" alt="">
+          <img class="lutador__sprite" src="img/nara.webp?v=202610052040" alt="">
           <div class="flutuantes" id="flutuantes-jogador"></div>
         </div>
 
@@ -151,6 +155,7 @@
           <span class="acao__icone" aria-hidden="true"></span>
           <span class="acao__nome">Atacar</span>
           <span class="acao__detalhe" id="detalhe-atacar">Dano firme</span>
+          <span class="acao__selo" aria-hidden="true">Finaliza</span>
         </button>
         <button type="button" class="acao" data-acao="defender" id="btn-defender" aria-label="Defender">
           <span class="acao__icone" aria-hidden="true"></span>
@@ -161,6 +166,8 @@
           <span class="acao__icone" aria-hidden="true"></span>
           <span class="acao__nome">Magia</span>
           <span class="acao__detalhe" id="detalhe-magia">Forte, gasta essência</span>
+          <span class="acao__selo" aria-hidden="true">Finaliza</span>
+          <span class="acao__carga" aria-hidden="true"></span>
         </button>
       </div>
     </section>
@@ -223,7 +230,7 @@
     </div>
   </div>
 
-  <script type="module" src="js/arena3d.js?v=202610020146"></script>
-  <script defer src="js/jogo.js?v=202610020146"></script>
+  <script type="module" src="js/arena3d.js?v=202610052040"></script>
+  <script defer src="js/jogo.js?v=202610052040"></script>
 </body>
 </html>

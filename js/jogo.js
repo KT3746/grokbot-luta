@@ -1,4 +1,4 @@
-/* LUTA — campanha de 10 círculos (Nara vs rivais originais). Visual 1.8.3 · Three.js arena. */
+/* LUTA — campanha de 10 círculos (Nara vs rivais originais). Visual 1.9.0 · Three.js arena. */
 (() => {
   "use strict";
 
@@ -10,8 +10,8 @@
     } catch (_) {}
   }
 
-  const VERSAO = "1.8.3";
-  const CACHE_V = "202610020146";
+  const VERSAO = "1.9.0";
+  const CACHE_V = "202610052040";
   const CHAVE = "duelo-rapido";
   const TOTAL_CIRCULOS = 10;
 
@@ -70,6 +70,14 @@
     metaMelhor: (n) => `Melhor sequência: ${n}`,
     seloCritico: "Acerto preciso!",
     seloMagia: "Clarão!",
+    magiaFalta: (n) => `Faltam ${n} · Defenda`,
+    magiaNega: (n, g) => `Faltam ${n} de essência para o Clarão. Defender recarrega +${g}.`,
+    koTitulo: "K.O.!",
+    koFinal: "K.O. final!",
+    koDerrota: "Caiu…",
+    koPerfeito: "Perfeito · sem dano",
+    koResumo: (t, d) => `${t} ${t === 1 ? "turno" : "turnos"} · −${d} vida`,
+    koDerrotaSub: (nome) => `${nome} venceu o círculo`,
   };
 
   const NARA = {
@@ -454,6 +462,9 @@
     melhorias: document.getElementById("melhorias"),
     dicaMinuto: document.getElementById("dica-minuto"),
     pausaVis: document.getElementById("pausa-visibilidade"),
+    arenaKo: document.getElementById("arena-ko"),
+    arenaKoTitulo: document.getElementById("arena-ko-titulo"),
+    arenaKoSub: document.getElementById("arena-ko-sub"),
   };
 
   const estado = {
@@ -473,6 +484,7 @@
     tutorialTravado: false,
     ignorarTituloAte: 0,
     stats: { turnos: 0, danoFeito: 0, danoTomado: 0, circulos: 0 },
+    lutaDanoTomado: 0,
   };
 
   function resetStats() {
@@ -1193,13 +1205,69 @@
     els.detalheAtacar.textContent = `${j.ataque.min}–${j.ataque.max} dano`;
     els.detalheMagia.textContent = `${j.magia.custo} essência · ${j.magia.min}–${j.magia.max}`;
     els.detalheDefender.textContent = `Guarda +${j.essenciaDefesa} essência`;
+    pintarDicasAcoes(!els.btnAtacar.disabled && !estado.ocupado);
+  }
+
+  /* Onda 3: dano mínimo garante o K.O.? (crítico só aumenta, então é exato). */
+  function koGarantido(ator, alvo, tipo) {
+    if (!ator || !alvo) return false;
+    if (tipo === "magia" && ator.essencia < ator.magia.custo) return false;
+    const faixa = tipo === "magia" ? ator.magia : ator.ataque;
+    const perf = tipo === "magia" ? ator.magia.perfuracao : 0;
+    let dano = Math.max(1, faixa.min);
+    if (alvo.guarda) dano = Math.max(1, Math.round(dano * (1 - alvo.guardaReducao * (1 - perf))));
+    return dano >= alvo.vida;
+  }
+
+  function pintarDicasAcoes(ativos) {
+    const j = estado.jogador;
+    const i = estado.inimigo;
+    if (!j) return;
+    const curta = j.essencia < j.magia.custo;
+    const carga = Math.max(0, Math.min(1, j.essencia / j.magia.custo));
+    els.btnMagia.style.setProperty("--carga", carga.toFixed(3));
+    els.btnMagia.classList.toggle("is-curta", curta);
+    els.btnMagia.setAttribute("aria-disabled", curta ? "true" : "false");
+    if (curta) {
+      els.detalheMagia.textContent = TEXTO.magiaFalta(j.magia.custo - j.essencia);
+    }
+    const koAtk = !!(ativos && i && koGarantido(j, i, "atacar"));
+    const koMag = !!(ativos && i && !koAtk && koGarantido(j, i, "magia"));
+    els.btnAtacar.classList.toggle("is-finaliza", koAtk);
+    els.btnMagia.classList.toggle("is-finaliza", koMag);
+    els.btnAtacar.setAttribute("aria-label", koAtk ? "Atacar (finaliza o rival)" : "Atacar");
+    els.btnMagia.setAttribute(
+      "aria-label",
+      koMag ? "Magia (finaliza o rival)" : curta ? `Magia (faltam ${j.magia.custo - j.essencia} de essência)` : "Magia"
+    );
+  }
+
+  function negarMagia() {
+    const j = estado.jogador;
+    if (!j) return;
+    const falta = Math.max(1, j.magia.custo - j.essencia);
+    relatar(TEXTO.magiaNega(falta, j.essenciaDefesa));
+    if (estado.audio) estado.audio.aviso();
+    vibrar([12, 40, 12]);
+    const m = els.btnMagia;
+    m.classList.remove("is-nega");
+    void m.offsetWidth;
+    m.classList.add("is-nega");
+    window.setTimeout(() => m.classList.remove("is-nega"), 460);
+    const d = els.btnDefender;
+    d.classList.remove("is-sugestao");
+    void d.offsetWidth;
+    d.classList.add("is-sugestao");
+    window.clearTimeout(negarMagia._t);
+    negarMagia._t = window.setTimeout(() => d.classList.remove("is-sugestao"), 1800);
   }
 
   function setBotoes(ativos) {
-    const magiaOk = ativos && estado.jogador && estado.jogador.essencia >= estado.jogador.magia.custo;
     els.btnAtacar.disabled = !ativos;
     els.btnDefender.disabled = !ativos;
-    els.btnMagia.disabled = !magiaOk;
+    /* Magia sem essência fica tocável (aria-disabled) para explicar o que falta. */
+    els.btnMagia.disabled = !ativos;
+    pintarDicasAcoes(!!ativos);
     els.acoes.setAttribute("aria-disabled", ativos ? "false" : "true");
     els.telaLuta.classList.toggle("is-sua-vez", !!ativos);
     if (els.txtVez) {
@@ -1263,6 +1331,8 @@
     estado.jogador.atingidoNestaRodada = false;
     estado.inimigo = clonarLutador(rival);
     estado.rodada = 1;
+    estado.lutaDanoTomado = 0;
+    esconderKO();
     estado.ocupado = true;
     estado.fase = "luta";
     estado.resultado = null;
@@ -1442,7 +1512,10 @@
       if (estado.audio) estado.audio.hit();
       vibrar(ator.chefe ? 32 : 20);
       if (atorChave === "jogador") estado.stats.danoFeito += resultado.dano;
-      else estado.stats.danoTomado += resultado.dano;
+      else {
+        estado.stats.danoTomado += resultado.dano;
+        estado.lutaDanoTomado += resultado.dano;
+      }
       soltarNumero(
         ladoAlvo,
         `−${resultado.dano}`,
@@ -1481,7 +1554,10 @@
         ? "numero-flutuante--guarda"
         : "numero-flutuante--dano";
     if (atorChave === "jogador") estado.stats.danoFeito += resultado.dano;
-    else estado.stats.danoTomado += resultado.dano;
+    else {
+      estado.stats.danoTomado += resultado.dano;
+      estado.lutaDanoTomado += resultado.dano;
+    }
     soltarNumero(ladoAlvo, critico ? `−${resultado.dano}!` : `−${resultado.dano}`, classeNum);
     const partes = [];
     if (atorChave === "jogador") partes.push(TEXTO.voceAtacou(resultado.dano, alvo.nome));
@@ -1533,13 +1609,41 @@
     foco.focus();
   }
 
+  function mostrarKO(vitoria) {
+    const el = els.arenaKo;
+    if (!el) return;
+    const final = vitoria && estado.circulo >= TOTAL_CIRCULOS - 1;
+    const perfeito = vitoria && estado.lutaDanoTomado === 0;
+    els.arenaKoTitulo.textContent = vitoria ? (final ? TEXTO.koFinal : TEXTO.koTitulo) : TEXTO.koDerrota;
+    els.arenaKoSub.textContent = vitoria
+      ? perfeito
+        ? TEXTO.koPerfeito
+        : TEXTO.koResumo(estado.rodada, estado.lutaDanoTomado)
+      : TEXTO.koDerrotaSub(estado.inimigo ? estado.inimigo.nome : TEXTO.rival);
+    el.className = `arena__ko ${vitoria ? "is-vitoria" : "is-derrota"}${perfeito ? " is-perfeito" : ""}${final ? " is-final" : ""}`;
+    el.hidden = false;
+    els.arena.classList.add("is-ko");
+  }
+
+  function esconderKO() {
+    if (els.arenaKo) {
+      els.arenaKo.hidden = true;
+      els.arenaKo.className = "arena__ko";
+    }
+    els.arena.classList.remove("is-ko");
+  }
+
   async function encerrar(vitoria) {
     if (vitoria) {
       els.lutadorInimigo.classList.add("is-cair");
       els.arena.classList.add("is-vitoria-arena");
+      fx3d("ko", "inimigo");
+      mostrarKO(true);
       if (estado.audio) estado.audio.vitoria();
-      await esperar(520);
+      vibrar([30, 50, 70]);
+      await esperar(prefersReduced() ? 900 : 1300);
       els.arena.classList.remove("is-vitoria-arena");
+      esconderKO();
       if (estado.circulo >= TOTAL_CIRCULOS - 1) {
         estado.stats.circulos = TOTAL_CIRCULOS;
         estado.fase = "concluida";
@@ -1559,7 +1663,11 @@
       return;
     }
     els.lutadorJogador.classList.add("is-cair");
+    fx3d("ko", "jogador");
+    mostrarKO(false);
     if (estado.audio) estado.audio.derrota();
+    vibrar([60, 40, 60]);
+    await esperar(prefersReduced() ? 700 : 1000);
     estado.fase = "luta";
     registrarDerrotaMeta();
     gravarCampanha();
@@ -1720,7 +1828,7 @@
   async function turnoJogador(acao) {
     if (document.hidden || estado.ocupado || estado.tela !== "luta" || !els.modalFim.hidden) return;
     if (acao === "magia" && estado.jogador.essencia < estado.jogador.magia.custo) {
-      relatar(TEXTO.essenciaCurta);
+      negarMagia();
       return;
     }
     dispensarDicaMinuto();
