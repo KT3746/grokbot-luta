@@ -1,7 +1,7 @@
 /* LUTA — arena Three.js baixo-poli (ESM). HUD HTML fica por cima. */
 import * as THREE from 'three';
 
-const CACHE_V = '202609280218';
+const CACHE_V = '202610052040';
 const FOG = 0x12101c;
 
 const TEMAS = {
@@ -70,7 +70,7 @@ function makeHumanoid(colors, scale = 1) {
   accent.position.y = 1.35 * scale;
   root.add(accent);
 
-  root.userData = { armL, armR, torso, head, baseY: 0, pose: 0 };
+  root.userData = { armL, armR, torso, head, baseY: 0, pose: 0, scale };
   return root;
 }
 
@@ -281,6 +281,39 @@ function resize() {
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   renderer.setSize(w, h, false);
+  syncOverlay();
+}
+
+/* Onda 3: alinha o overlay HTML (flash, guarda, números) com os bonecos 3D. */
+const _ovA = new THREE.Vector3();
+const _ovB = new THREE.Vector3();
+function syncOverlay() {
+  if (!arenaEl || !camera || !camBase) return;
+  const w = arenaEl.clientWidth;
+  const h = arenaEl.clientHeight;
+  if (!w || !h) return;
+  camera.position.copy(camBase);
+  camera.lookAt(0, 1.1, 0);
+  camera.updateMatrixWorld();
+  const pares = [
+    [naraRoot, 'lutador-jogador', -1.55],
+    [rivalRoot, 'lutador-inimigo', 1.55],
+  ];
+  for (const [root, id, x] of pares) {
+    const el = document.getElementById(id);
+    if (!el || !root) continue;
+    const s = root.userData.scale || 1;
+    _ovA.set(x, 0, 0.4).project(camera);
+    _ovB.set(x, 2.1 * s, 0.4).project(camera);
+    const px = (_ovA.x * 0.5 + 0.5) * w;
+    const pe = (-_ovA.y * 0.5 + 0.5) * h;
+    const pt = (-_ovB.y * 0.5 + 0.5) * h;
+    const alt = Math.max(40, pe - pt);
+    el.style.setProperty('--ov-x', `${px.toFixed(1)}px`);
+    el.style.setProperty('--ov-top', `${pt.toFixed(1)}px`);
+    el.style.setProperty('--ov-h', `${alt.toFixed(1)}px`);
+    el.classList.add('is-ov');
+  }
 }
 
 function poseFighter(root, kind, t) {
@@ -332,6 +365,14 @@ function updatePoses(dt) {
     [naraRoot, naraPose],
     [rivalRoot, rivalPose],
   ]) {
+    if (root && root.userData.cair != null) {
+      root.userData.cair = Math.min(1, root.userData.cair + dt / (reducedMotion ? 0.2 : 0.55));
+      const k = 1 - Math.pow(1 - root.userData.cair, 3);
+      /* rival está girado ~180° em Y: +Z local cai para fora nos dois lados */
+      root.rotation.z = 1.25 * k;
+      root.position.y = -0.05 * k;
+      continue;
+    }
     if (pose.kind) {
       pose.t += dt / 0.42;
       poseFighter(root, pose.kind, pose.t);
@@ -478,10 +519,35 @@ api.startFight = function startFight(opts = {}) {
   naraPose = { kind: null, t: 0 };
   rivalPose = { kind: null, t: 0 };
   shake = 0;
-  if (naraRoot) naraRoot.visible = true;
-  if (rivalRoot) rivalRoot.visible = true;
+  if (naraRoot) {
+    naraRoot.visible = true;
+    naraRoot.userData.cair = null;
+    naraRoot.rotation.z = 0;
+  }
+  if (rivalRoot) {
+    rivalRoot.visible = true;
+    rivalRoot.userData.cair = null;
+    rivalRoot.rotation.z = 0;
+  }
   running = true;
   resize();
+};
+
+/* Onda 3: K.O. em câmera lenta curta (reduced-motion: só brilho). */
+api.ko = function ko(side) {
+  if (!api.ready) return;
+  const root = side === 'jogador' || side === 'nara' ? naraRoot : rivalRoot;
+  const t = TEMAS[currentTema] || TEMAS.areia;
+  if (ring?.material) ring.material.emissiveIntensity = 1.1;
+  flashColor = side === 'jogador' ? 0x401018 : t.accent;
+  flashT = 0.5;
+  if (root) root.userData.cair = 0;
+  if (reducedMotion) return;
+  shake = 0.5;
+  if (root) {
+    spawnBurst(root.position.x, 1.4, root.position.z, 0xffe08a, api.lowFx ? 12 : 24, 3.8);
+    spawnBurst(root.position.x, 1.0, root.position.z, t.accent, api.lowFx ? 6 : 14, 2.4);
+  }
 };
 
 api.setVisible = function setVisible(on) {
