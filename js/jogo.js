@@ -1,4 +1,4 @@
-/* LUTA — campanha de 10 círculos (Nara vs rivais originais). Visual 1.9.0 · Three.js arena. */
+/* LUTA — campanha de 10 círculos (Nara vs rivais originais). Visual 1.10.0 · Three.js arena. */
 (() => {
   "use strict";
 
@@ -10,8 +10,8 @@
     } catch (_) {}
   }
 
-  const VERSAO = "1.9.0";
-  const CACHE_V = "202610052040";
+  const VERSAO = "1.10.0";
+  const CACHE_V = "202610060530";
   const CHAVE = "duelo-rapido";
   const TOTAL_CIRCULOS = 10;
 
@@ -78,7 +78,25 @@
     koPerfeito: "Perfeito · sem dano",
     koResumo: (t, d) => `${t} ${t === 1 ? "turno" : "turnos"} · −${d} vida`,
     koDerrotaSub: (nome) => `${nome} venceu o círculo`,
+    /* Onda 4 */
+    contraPronto: "Guarda segurou! Contra-golpe pronto: o próximo Atacar bate +40%.",
+    contraSelo: "Contra-golpe!",
+    contraRelato: "Contra-golpe!",
+    previaAtaque: (min, max, nome, restoMin, restoMax) =>
+      `Atacar: ${min}–${max} de dano. ${nome} fica com ${restoMin}–${restoMax}.`,
+    previaMagia: (min, max, nome, restoMin, restoMax, custo) =>
+      `Clarão: ${min}–${max} de dano (${custo} essência). ${nome} fica com ${restoMin}–${restoMax}.`,
+    previaMagiaCurta: (falta) => `Clarão: faltam ${falta} de essência. Defenda para recarregar.`,
+    previaDefender: (ganho, pct) => `Defender: +${ganho} essência e o próximo golpe perde ${pct}%.`,
+    previaKO: " Garante o K.O.!",
+    previaSolte: " Solte fora do botão para cancelar.",
+    leituraVazia: "Sem leitura ainda",
+    pausaTitulo: "Pausa",
+    pausaLuta: (c, nome) => `Círculo ${c}/10 contra ${nome}. O duelo espera por você.`,
+    pausaDescanso: (c) => `Respiro antes do círculo ${c}/10. Seu reforço espera.`,
   };
+
+  const BONUS_CONTRA = 1.4;
 
   const NARA = {
     id: "nara",
@@ -465,6 +483,14 @@
     arenaKo: document.getElementById("arena-ko"),
     arenaKoTitulo: document.getElementById("arena-ko-titulo"),
     arenaKoSub: document.getElementById("arena-ko-sub"),
+    btnPausa: document.getElementById("btn-pausa"),
+    modalPausa: document.getElementById("modal-pausa"),
+    pausaTexto: document.getElementById("pausa-texto"),
+    btnPausaVoltar: document.getElementById("btn-pausa-voltar"),
+    btnPausaSom: document.getElementById("btn-pausa-som"),
+    btnPausaSair: document.getElementById("btn-pausa-sair"),
+    leitura: document.getElementById("leitura-rival"),
+    leituraTrilha: document.getElementById("leitura-trilha"),
   };
 
   const estado = {
@@ -485,6 +511,11 @@
     ignorarTituloAte: 0,
     stats: { turnos: 0, danoFeito: 0, danoTomado: 0, circulos: 0 },
     lutaDanoTomado: 0,
+    pausaMenu: false,
+    geracao: 0,
+    leitura: [],
+    previa: null,
+    ignorarCliqueAte: 0,
   };
 
   function resetStats() {
@@ -649,7 +680,12 @@
     return min + Math.floor(Math.random() * (max - min + 1));
   }
 
+  function pausado() {
+    return document.hidden || estado.pausaMenu;
+  }
+
   function esperar(ms) {
+    const geracao = estado.geracao;
     return new Promise((resolve) => {
       let remaining = ms;
       let start = performance.now();
@@ -664,19 +700,26 @@
 
       function done() {
         document.removeEventListener("visibilitychange", onVis);
+        window.removeEventListener("luta:pausa", onVis);
         clear();
+        /* Saiu do duelo pelo menu: a sequência antiga não continua. */
+        if (geracao !== estado.geracao) return;
         resolve();
       }
 
       function schedule() {
         clear();
-        if (document.hidden) return;
+        if (pausado()) return;
         start = performance.now();
         timer = setTimeout(done, remaining);
       }
 
       function onVis() {
-        if (document.hidden) {
+        if (geracao !== estado.geracao) {
+          done();
+          return;
+        }
+        if (pausado()) {
           if (timer != null) {
             remaining = Math.max(0, remaining - (performance.now() - start));
             clear();
@@ -687,6 +730,7 @@
       }
 
       document.addEventListener("visibilitychange", onVis);
+      window.addEventListener("luta:pausa", onVis);
       schedule();
     });
   }
@@ -749,6 +793,7 @@
       essenciaDefesa: modelo.essenciaDefesa,
       critico: modelo.critico,
       guarda: false,
+      contra: false,
       atingidoNestaRodada: false,
       ultimaAcao: null,
       estilo: modelo.estilo || "jogador",
@@ -968,6 +1013,7 @@
     fx3d("setVisible", nome === "luta");
     els.telaDescanso.classList.toggle("is-ativa", nome === "descanso");
     els.telaDescanso.hidden = nome !== "descanso";
+    atualizarBtnPausa();
   }
 
   function flutuantesDe(lado) {
@@ -1202,7 +1248,9 @@
     els.lutadorInimigo.classList.toggle("is-guarda", i.guarda);
     els.placaJogador.classList.toggle("is-critica", j.vida / j.vidaMax <= 0.3);
     els.placaInimigo.classList.toggle("is-critica", i.vida / i.vidaMax <= 0.3);
-    els.detalheAtacar.textContent = `${j.ataque.min}–${j.ataque.max} dano`;
+    els.detalheAtacar.textContent = j.contra
+      ? `${Math.round(j.ataque.min * BONUS_CONTRA)}–${Math.round(j.ataque.max * BONUS_CONTRA)} contra`
+      : `${j.ataque.min}–${j.ataque.max} dano`;
     els.detalheMagia.textContent = `${j.magia.custo} essência · ${j.magia.min}–${j.magia.max}`;
     els.detalheDefender.textContent = `Guarda +${j.essenciaDefesa} essência`;
     pintarDicasAcoes(!els.btnAtacar.disabled && !estado.ocupado);
@@ -1215,6 +1263,7 @@
     const faixa = tipo === "magia" ? ator.magia : ator.ataque;
     const perf = tipo === "magia" ? ator.magia.perfuracao : 0;
     let dano = Math.max(1, faixa.min);
+    if (tipo === "atacar" && ator.contra) dano = Math.round(dano * BONUS_CONTRA);
     if (alvo.guarda) dano = Math.max(1, Math.round(dano * (1 - alvo.guardaReducao * (1 - perf))));
     return dano >= alvo.vida;
   }
@@ -1234,8 +1283,12 @@
     const koAtk = !!(ativos && i && koGarantido(j, i, "atacar"));
     const koMag = !!(ativos && i && !koAtk && koGarantido(j, i, "magia"));
     els.btnAtacar.classList.toggle("is-finaliza", koAtk);
+    els.btnAtacar.classList.toggle("is-contra", !!(j.contra && !koAtk));
     els.btnMagia.classList.toggle("is-finaliza", koMag);
-    els.btnAtacar.setAttribute("aria-label", koAtk ? "Atacar (finaliza o rival)" : "Atacar");
+    els.btnAtacar.setAttribute(
+      "aria-label",
+      koAtk ? "Atacar (finaliza o rival)" : j.contra ? "Atacar (contra-golpe +40%)" : "Atacar"
+    );
     els.btnMagia.setAttribute(
       "aria-label",
       koMag ? "Magia (finaliza o rival)" : curta ? `Magia (faltam ${j.magia.custo - j.essencia} de essência)` : "Magia"
@@ -1326,7 +1379,13 @@
       estado.jogador.vida = estado.jogador.vidaMax;
       estado.jogador.essencia = estado.jogador.essenciaMax;
     }
+    estado.geracao += 1;
+    fecharPausa(true);
+    limparPrevia();
     estado.jogador.guarda = false;
+    estado.jogador.contra = false;
+    estado.leitura = [];
+    pintarLeitura();
     estado.jogador.ultimaAcao = null;
     estado.jogador.atingidoNestaRodada = false;
     estado.inimigo = clonarLutador(rival);
@@ -1368,11 +1427,16 @@
     const faixa = tipo === "magia" ? ator.magia : ator.ataque;
     let valor = entre(faixa.min, faixa.max);
     let critico = false;
+    let contra = false;
+    if (tipo === "atacar" && ator.contra) {
+      valor = Math.round(valor * BONUS_CONTRA);
+      contra = true;
+    }
     if (tipo === "atacar" && Math.random() < ator.critico) {
       valor = Math.round(valor * 1.5);
       critico = true;
     }
-    return { valor, critico };
+    return { valor, critico, contra };
   }
 
   function aplicarDano(alvo, bruto, perfuracao) {
@@ -1473,6 +1537,9 @@
     const ladoAlvo = alvoChave;
 
     ator.ultimaAcao = acao;
+    if (atorChave === "inimigo") registrarLeitura(acao);
+    const contraAtivo = atorChave === "jogador" && acao === "atacar" && !!ator.contra;
+    if (atorChave === "jogador") ator.contra = false;
 
     if (acao === "defender") {
       ator.guarda = true;
@@ -1527,6 +1594,7 @@
       } else {
         relatar(`${TEXTO.inimigoMagia(ator.nome, ator.magia.nome, resultado.dano)}${extra}`);
       }
+      armarContra(atorChave, alvo, resultado);
       pintarHud();
       if (!resultado.bloqueado) mostrarSeloJuice(TEXTO.seloMagia, "magia");
       const hit = animar(elAlvo, "is-hit", ator.chefe ? 560 : 460, {
@@ -1538,7 +1606,9 @@
       return;
     }
 
-    const { valor, critico } = danoBruto(ator, "atacar");
+    if (contraAtivo) ator.contra = true;
+    const { valor, critico, contra } = danoBruto(ator, "atacar");
+    ator.contra = false;
     const resultado = aplicarDano(alvo, valor, 0);
     if (estado.audio) estado.audio.atacar();
     if (atorChave === "jogador") pulsarAcao("atacar");
@@ -1547,9 +1617,11 @@
       if (critico) estado.audio.critico();
       else estado.audio.hit();
     }
-    vibrar(critico ? 28 : ator.chefe ? 22 : 12);
+    vibrar(critico ? 28 : contra ? [16, 30, 22] : ator.chefe ? 22 : 12);
     const classeNum = critico
       ? "numero-flutuante--critico"
+      : contra
+        ? "numero-flutuante--contra"
       : resultado.bloqueado
         ? "numero-flutuante--guarda"
         : "numero-flutuante--dano";
@@ -1562,18 +1634,21 @@
     const partes = [];
     if (atorChave === "jogador") partes.push(TEXTO.voceAtacou(resultado.dano, alvo.nome));
     else partes.push(TEXTO.inimigoAtacou(ator.nome, resultado.dano));
+    if (contra) partes.unshift(TEXTO.contraRelato);
     if (critico) partes.push(TEXTO.acertoPreciso);
     if (resultado.bloqueado) partes.push(TEXTO.escudoAbsorveu);
     relatar(partes.join(" "));
+    armarContra(atorChave, alvo, resultado);
     pintarHud();
-    const tipoFlash = critico ? "critico" : resultado.bloqueado ? "guarda" : "ataque";
+    const tipoFlash = critico || contra ? "critico" : resultado.bloqueado ? "guarda" : "ataque";
     if (critico) mostrarSeloJuice(TEXTO.seloCritico, "critico");
-    const hit = animar(elAlvo, "is-hit", critico || ator.chefe ? 540 : 420, {
-      critico: !!critico,
+    else if (contra) mostrarSeloJuice(TEXTO.contraSelo, "contra");
+    const hit = animar(elAlvo, "is-hit", critico || contra || ator.chefe ? 540 : 420, {
+      critico: !!(critico || contra),
       tipo: tipoFlash,
-      forte: !!(critico || ator.chefe),
+      forte: !!(critico || contra || ator.chefe),
     });
-    const treme = tremerArena(!!(critico || ator.chefe), tipoFlash);
+    const treme = tremerArena(!!(critico || contra || ator.chefe), tipoFlash);
     await Promise.all([hit, treme]);
   }
 
@@ -1780,7 +1855,7 @@
   }
 
   async function escolherMelhoria(id) {
-    if (estado.tela !== "descanso" || estado.ocupado) return;
+    if (estado.tela !== "descanso" || estado.ocupado || estado.pausaMenu) return;
     const m = estado.melhorias.find((x) => x.id === id) || melhoriaPorId(id);
     if (!m) return;
     estado.ocupado = true;
@@ -1826,12 +1901,14 @@
   }
 
   async function turnoJogador(acao) {
-    if (document.hidden || estado.ocupado || estado.tela !== "luta" || !els.modalFim.hidden) return;
+    if (document.hidden || estado.pausaMenu || estado.ocupado || estado.tela !== "luta" || !els.modalFim.hidden) return;
+    limparPrevia();
     if (acao === "magia" && estado.jogador.essencia < estado.jogador.magia.custo) {
       negarMagia();
       return;
     }
     dispensarDicaMinuto();
+    limparPrevia();
     estado.ocupado = true;
     setBotoes(false);
     els.txtVez.textContent = TEXTO.resolvendo;
@@ -1873,12 +1950,270 @@
     els.txtVez.textContent = TEXTO.suaVezDrama;
     setVezInimigo(false);
     pintarHud();
-    relatar(`${recapJogador} · ${recapInimigo}`);
+    relatar(
+      estado.jogador.contra
+        ? `${recapInimigo} ${TEXTO.contraPronto}`
+        : `${recapJogador} · ${recapInimigo}`
+    );
     if (estado.audio) estado.audio.turno();
     estado.ocupado = false;
     setBotoes(true);
     gravarCampanha();
     window.setTimeout(() => els.arena.classList.remove("is-rodada"), 480);
+  }
+
+  /* ===== Onda 4: contra-golpe ===== */
+  function armarContra(atorChave, alvo, resultado) {
+    if (atorChave !== "inimigo" || !resultado.bloqueado || alvo !== estado.jogador) return;
+    if (alvo.vida <= 0) return;
+    alvo.contra = true;
+    soltarNumero("jogador", "Contra!", "numero-flutuante--contra");
+  }
+
+  /* ===== Onda 4: leitura do rival (últimas ações) ===== */
+  function registrarLeitura(acao) {
+    estado.leitura.push(acao);
+    if (estado.leitura.length > 4) estado.leitura.shift();
+    pintarLeitura(true);
+  }
+
+  function pintarLeitura(nova) {
+    if (!els.leituraTrilha) return;
+    const nomes = { atacar: "ataque", defender: "guarda", magia: "magia" };
+    const lista = estado.leitura;
+    els.leituraTrilha.innerHTML = lista.length
+      ? lista
+          .map((a, idx) => {
+            const ultimo = idx === lista.length - 1;
+            const cls = `leitura__pip leitura__pip--${a}${ultimo && nova ? " is-nova" : ""}${ultimo ? " is-ultima" : ""}`;
+            return `<li class="${cls}" title="${nomes[a] || a}"></li>`;
+          })
+          .join("")
+      : `<li class="leitura__vazia">${TEXTO.leituraVazia}</li>`;
+    if (els.leitura) {
+      const falado = lista.map((a) => nomes[a] || a).join(", ");
+      els.leitura.setAttribute("aria-label", lista.length ? `Últimas ações do rival: ${falado}` : TEXTO.leituraVazia);
+    }
+  }
+
+  /* ===== Onda 4: segure a ação para ver o dano ===== */
+  function faixaDano(ator, alvo, tipo) {
+    const faixa = tipo === "magia" ? ator.magia : ator.ataque;
+    const perf = tipo === "magia" ? ator.magia.perfuracao : 0;
+    const mult = tipo === "atacar" && ator.contra ? BONUS_CONTRA : 1;
+    const calc = (v) => {
+      let d = Math.max(1, Math.round(v * mult));
+      if (alvo.guarda) d = Math.max(1, Math.round(d * (1 - alvo.guardaReducao * (1 - perf))));
+      return d;
+    };
+    return { min: calc(faixa.min), max: calc(faixa.max) };
+  }
+
+  function barraPrevia(trilha) {
+    let el = trilha.querySelector(".barra__previa");
+    if (!el) {
+      el = document.createElement("div");
+      el.className = "barra__previa";
+      trilha.appendChild(el);
+    }
+    return el;
+  }
+
+  function mostrarPrevia(acao) {
+    if (!combatePodeReceberAtalho() || estado.pausaMenu) return;
+    const j = estado.jogador;
+    const i = estado.inimigo;
+    if (!j || !i) return;
+    const relatoAntes = estado.previa ? estado.previa.relatoAntes : els.relato.textContent;
+    limparPrevia(true);
+    let texto = "";
+    let trilha = null;
+    let deMin = 0;
+    let deMax = 0;
+    let maximo = 1;
+    if (acao === "defender") {
+      const ganho = Math.min(j.essenciaDefesa, j.essenciaMax - j.essencia);
+      texto = TEXTO.previaDefender(ganho, Math.round(j.guardaReducao * 100));
+      trilha = document.getElementById("essencia-jogador-meter");
+      maximo = j.essenciaMax;
+      deMin = j.essencia;
+      deMax = j.essencia + ganho;
+    } else if (acao === "magia" && j.essencia < j.magia.custo) {
+      texto = TEXTO.previaMagiaCurta(j.magia.custo - j.essencia);
+    } else {
+      const f = faixaDano(j, i, acao);
+      const restoMin = Math.max(0, i.vida - f.max);
+      const restoMax = Math.max(0, i.vida - f.min);
+      texto = acao === "magia"
+        ? TEXTO.previaMagia(f.min, f.max, i.nome, restoMin, restoMax, j.magia.custo)
+        : TEXTO.previaAtaque(f.min, f.max, i.nome, restoMin, restoMax);
+      if (restoMax <= 0) texto += TEXTO.previaKO;
+      trilha = document.getElementById("vida-inimigo-meter");
+      maximo = i.vidaMax;
+      deMin = restoMin;
+      deMax = i.vida;
+    }
+    els.relato.textContent = texto;
+    els.relato.classList.add("is-previa");
+    let barra = null;
+    if (trilha) {
+      barra = barraPrevia(trilha);
+      const a = Math.max(0, Math.min(1, deMin / maximo));
+      const b = Math.max(0, Math.min(1, deMax / maximo));
+      barra.style.left = `${(a * 100).toFixed(2)}%`;
+      barra.style.width = `${Math.max(0.6, (b - a) * 100).toFixed(2)}%`;
+      barra.dataset.tipo = acao;
+      barra.classList.add("is-on");
+      trilha.closest(".placa")?.classList.add("is-previa");
+    }
+    estado.previa = { acao, relatoAntes, texto, barra };
+  }
+
+  function limparPrevia(manterRelato) {
+    const p = estado.previa;
+    if (!p) return;
+    estado.previa = null;
+    if (p.barra) {
+      p.barra.classList.remove("is-on");
+      p.barra.closest(".placa")?.classList.remove("is-previa");
+    }
+    els.relato.classList.remove("is-previa");
+    if (!manterRelato && els.relato.textContent === p.texto) els.relato.textContent = p.relatoAntes;
+  }
+
+  function ligarPrevia() {
+    let timer = null;
+    let botao = null;
+    let segurou = false;
+    const SEGURAR_MS = 380;
+    const reset = () => {
+      window.clearTimeout(timer);
+      timer = null;
+      botao = null;
+      segurou = false;
+    };
+    els.acoes.addEventListener("pointerdown", (ev) => {
+      const btn = ev.target.closest("[data-acao]");
+      if (!btn || btn.disabled || ev.button > 0) return;
+      reset();
+      botao = btn;
+      timer = window.setTimeout(() => {
+        if (!botao) return;
+        mostrarPrevia(botao.dataset.acao);
+        if (!estado.previa) return;
+        segurou = true;
+        els.relato.textContent = estado.previa.texto + TEXTO.previaSolte;
+        estado.previa.texto = els.relato.textContent;
+        botao.classList.add("is-segurando");
+        vibrar(8);
+      }, SEGURAR_MS);
+    });
+    /* Na janela: o mouse pode soltar fora da barra de ações. */
+    window.addEventListener("pointerup", (ev) => {
+      if (!botao) return;
+      const btn = botao;
+      const foiSegurado = segurou;
+      reset();
+      if (btn) btn.classList.remove("is-segurando");
+      if (!foiSegurado) return;
+      /* Segurou: soltar em cima do mesmo botão age; fora, cancela. O clique nativo é ignorado. */
+      estado.ignorarCliqueAte = Date.now() + 450;
+      const sob = document.elementFromPoint(ev.clientX, ev.clientY);
+      const alvo = sob && sob.closest ? sob.closest("[data-acao]") : null;
+      if (alvo === btn && !btn.disabled) {
+        garantirAudio();
+        turnoJogador(btn.dataset.acao);
+      } else {
+        limparPrevia();
+      }
+    });
+    window.addEventListener("pointercancel", () => {
+      if (!botao) return;
+      botao.classList.remove("is-segurando");
+      reset();
+      limparPrevia();
+    });
+    els.acoes.addEventListener("pointerleave", (ev) => {
+      if (ev.pointerType === "mouse" && !botao) limparPrevia();
+    });
+    els.acoes.addEventListener("contextmenu", (ev) => {
+      if (ev.target.closest("[data-acao]")) ev.preventDefault();
+    });
+    /* Mouse: passar por cima já mostra a prévia. */
+    els.acoes.addEventListener("pointerover", (ev) => {
+      if (ev.pointerType !== "mouse" || botao) return;
+      const btn = ev.target.closest("[data-acao]");
+      if (!btn || btn.disabled) return;
+      if (estado.previa && estado.previa.acao === btn.dataset.acao) return;
+      mostrarPrevia(btn.dataset.acao);
+    });
+  }
+
+  /* ===== Onda 4: menu de pausa ===== */
+  function podePausar() {
+    return (estado.tela === "luta" || estado.tela === "descanso")
+      && els.modalFim.hidden
+      && els.modalTutorial.hidden
+      && !estado.pausaMenu;
+  }
+
+  function atualizarBtnPausa() {
+    if (!els.btnPausa) return;
+    els.btnPausa.hidden = !(estado.tela === "luta" || estado.tela === "descanso");
+  }
+
+  function abrirPausa() {
+    if (!els.modalPausa || !podePausar()) return;
+    limparPrevia();
+    estado.pausaMenu = true;
+    window.dispatchEvent(new Event("luta:pausa"));
+    const rival = rivalAtual();
+    els.pausaTexto.textContent = estado.tela === "descanso"
+      ? TEXTO.pausaDescanso(estado.circulo + 1)
+      : TEXTO.pausaLuta(estado.circulo + 1, rival ? rival.nome : TEXTO.rival);
+    atualizarPausaSom();
+    els.modalPausa.hidden = false;
+    els.app.classList.add("is-pausa-menu");
+    if (estado.audio) estado.audio.ui();
+    els.btnPausaVoltar.focus();
+  }
+
+  function atualizarPausaSom() {
+    if (!els.btnPausaSom) return;
+    els.btnPausaSom.textContent = estado.mudo ? "Som: desligado" : "Som: ligado";
+    els.btnPausaSom.setAttribute("aria-pressed", estado.mudo ? "true" : "false");
+  }
+
+  function fecharPausa(silencioso) {
+    if (!els.modalPausa) return;
+    const estava = estado.pausaMenu;
+    estado.pausaMenu = false;
+    els.modalPausa.hidden = true;
+    els.app.classList.remove("is-pausa-menu");
+    if (estava) window.dispatchEvent(new Event("luta:pausa"));
+    if (!silencioso && estava) {
+      if (estado.audio) estado.audio.ui();
+      if (estado.tela === "luta" && !estado.ocupado) els.btnAtacar.focus();
+      else if (els.btnPausa) els.btnPausa.focus();
+    }
+  }
+
+  function sairParaInicio() {
+    /* A campanha já foi salva no fim do último turno / ao entrar no Respiro. */
+    estado.geracao += 1;
+    fecharPausa(true);
+    limparPrevia();
+    estado.ocupado = false;
+    estado.jogador && (estado.jogador.contra = false);
+    els.lutadorInimigo.classList.remove("is-telegraph-ataque", "is-telegraph-defesa", "is-telegraph-magia");
+    fx3d("clearTelegraph");
+    esconderKO();
+    setVezInimigo(false);
+    if (estado.fase !== "descanso") gravarCampanha();
+    atualizarTituloBotoes();
+    mostrarTela("titulo");
+    const foco = els.btnContinuar.hidden ? els.btnComecar : els.btnContinuar;
+    foco.focus();
   }
 
   function novaCampanha() {
@@ -1972,6 +2307,7 @@
     return estado.tela === "luta"
       && !document.hidden
       && !estado.ocupado
+      && !estado.pausaMenu
       && els.modalFim.hidden
       && els.modalTutorial.hidden
       && els.telaDescanso.hidden;
@@ -2012,14 +2348,29 @@
       estado.mudo = !estado.mudo;
       gravarFlag("mudo", estado.mudo);
       atualizarSomUi();
+      atualizarPausaSom();
       if (!estado.mudo) garantirAudio();
     });
     els.acoes.addEventListener("click", (ev) => {
       const btn = ev.target.closest("[data-acao]");
       if (!btn || btn.disabled) return;
+      if (Date.now() < (estado.ignorarCliqueAte || 0)) return;
       garantirAudio();
       turnoJogador(btn.dataset.acao);
     });
+    ligarPrevia();
+    if (els.btnPausa) {
+      els.btnPausa.addEventListener("click", () => {
+        garantirAudio();
+        abrirPausa();
+      });
+      els.btnPausaVoltar.addEventListener("click", () => fecharPausa(false));
+      els.btnPausaSom.addEventListener("click", () => els.btnSom.click());
+      els.btnPausaSair.addEventListener("click", () => sairParaInicio());
+      els.modalPausa.addEventListener("click", (ev) => {
+        if (ev.target === els.modalPausa) fecharPausa(false);
+      });
+    }
     els.btnRetry.addEventListener("click", () => {
       garantirAudio();
       if (estado.fase === "concluida") {
@@ -2053,6 +2404,19 @@
       } catch (_) { /* ok */ }
     });
     document.addEventListener("keydown", (ev) => {
+      if (ev.key === "Escape" || ev.key === "p" || ev.key === "P") {
+        if (estado.pausaMenu) {
+          ev.preventDefault();
+          fecharPausa(false);
+          return;
+        }
+        if (podePausar()) {
+          ev.preventDefault();
+          abrirPausa();
+          return;
+        }
+      }
+      if (estado.pausaMenu) return;
       if (ev.key === "s" || ev.key === "S") {
         if (ev.target && (ev.target.tagName === "INPUT" || ev.target.tagName === "TEXTAREA")) return;
         els.btnSom.click();
