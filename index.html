@@ -10,13 +10,13 @@
   <meta name="apple-mobile-web-app-title" content="LUTA">
   <meta name="mobile-web-app-capable" content="yes">
   <title>LUTA</title>
-  <link rel="icon" href="favicon.svg?v=202610052040" type="image/svg+xml">
-  <link rel="manifest" href="manifest.webmanifest?v=202610052040">
-  <link rel="stylesheet" href="css/estilo.css?v=202610052040">
+  <link rel="icon" href="favicon.svg?v=202610060530" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest?v=202610060530">
+  <link rel="stylesheet" href="css/estilo.css?v=202610060530">
   <script type="importmap">
   {
     "imports": {
-      "three": "./js/vendor/three.module.js?v=202610052040"
+      "three": "./js/vendor/three.module.js?v=202610060530"
     }
   }
   </script>
@@ -32,6 +32,10 @@
       <span class="btn-som__icone" aria-hidden="true"></span>
       <span class="btn-som__txt">Som</span>
     </button>
+    <button type="button" id="btn-pausa" class="btn-pausa" aria-label="Pausar o duelo" aria-haspopup="dialog" hidden>
+      <span class="btn-pausa__icone" aria-hidden="true"></span>
+      <span class="btn-pausa__txt">Pausa</span>
+    </button>
 
     <section id="tela-titulo" class="tela tela--titulo is-ativa" aria-label="Tela inicial">
       <div class="titulo-marca">
@@ -42,8 +46,8 @@
       </div>
       <div class="titulo-art" aria-hidden="true">
         <div class="titulo-art__anel"></div>
-        <div class="titulo-art__nara"><img src="img/nara.webp?v=202610052040" alt=""></div>
-        <div class="titulo-art__rival"><img src="img/aurenegra.webp?v=202610052040" alt=""></div>
+        <div class="titulo-art__nara"><img src="img/nara.webp?v=202610060530" alt=""></div>
+        <div class="titulo-art__rival"><img src="img/aurenegra.webp?v=202610060530" alt=""></div>
         <ol class="titulo-art__pips">
           <li></li><li></li><li></li><li></li><li class="is-chefe"></li>
           <li></li><li></li><li></li><li class="is-chefe"></li><li class="is-chefe"></li>
@@ -56,7 +60,7 @@
         <button type="button" id="btn-comecar" class="btn btn--principal">Começar campanha</button>
         <button type="button" id="btn-nova" class="btn btn--fantasma" hidden>Nova campanha</button>
       </div>
-      <p class="titulo-dica">Toque grande, funciona no celular. Atalhos: 1 Atacar · 2 Defender · 3 Magia</p>
+      <p class="titulo-dica">Toque grande, funciona no celular. Segure um botão para ver o dano. Atalhos: 1 Atacar · 2 Defender · 3 Magia · Esc pausa</p>
     </section>
 
     <section id="tela-luta" class="tela tela--luta" aria-label="Campo de duelo" hidden>
@@ -111,6 +115,10 @@
               <div class="barra__preenchimento barra__preenchimento--essencia" id="essencia-inimigo-bar"></div>
             </div>
           </div>
+          <div class="leitura" id="leitura-rival" role="img" aria-label="Sem leitura ainda">
+            <span class="leitura__rotulo" aria-hidden="true">Últimas</span>
+            <ol class="leitura__trilha" id="leitura-trilha" aria-hidden="true"><li class="leitura__vazia">Sem leitura ainda</li></ol>
+          </div>
         </div>
       </header>
 
@@ -131,7 +139,7 @@
           <div class="lutador__sombra"></div>
           <div class="lutador__guarda" aria-hidden="true"></div>
           <div class="lutador__flash" aria-hidden="true"></div>
-          <img class="lutador__sprite" src="img/nara.webp?v=202610052040" alt="">
+          <img class="lutador__sprite" src="img/nara.webp?v=202610060530" alt="">
           <div class="flutuantes" id="flutuantes-jogador"></div>
         </div>
 
@@ -156,6 +164,7 @@
           <span class="acao__nome">Atacar</span>
           <span class="acao__detalhe" id="detalhe-atacar">Dano firme</span>
           <span class="acao__selo" aria-hidden="true">Finaliza</span>
+          <span class="acao__selo acao__selo--contra" aria-hidden="true">Contra</span>
         </button>
         <button type="button" class="acao" data-acao="defender" id="btn-defender" aria-label="Defender">
           <span class="acao__icone" aria-hidden="true"></span>
@@ -200,7 +209,9 @@
           <li><strong>Atacar</strong> — dano firme, sem gastar essência.</li>
           <li><strong>Defender</strong> — aguenta o próximo golpe e recupera essência.</li>
           <li><strong>Magia</strong> — golpe forte; custa essência e fura parte da guarda.</li>
+          <li><strong>Contra-golpe</strong> — se a sua guarda segurar o golpe do rival, o próximo Atacar bate +40%.</li>
         </ul>
+        <p class="tutorial-dica">Segure um botão para ver o dano antes de agir. Solte fora para cancelar.</p>
         <p>O rival mostra o que vai fazer um instante antes do golpe. Entre lutas, descanse e pegue um reforço.</p>
         <button type="button" id="btn-entendi" class="btn btn--principal">Entendi</button>
       </div>
@@ -212,6 +223,19 @@
         <p class="chefe-selo" id="chefe-selo">Chefe</p>
         <h2 id="chefe-titulo">Rival</h2>
         <p id="chefe-texto">O círculo treme.</p>
+      </div>
+    </div>
+
+    <div id="modal-pausa" class="modal modal--pausa" hidden>
+      <div class="modal__caixa modal__caixa--pausa" role="dialog" aria-modal="true" aria-labelledby="pausa-titulo">
+        <p class="fim-selo">Duelo parado</p>
+        <h2 id="pausa-titulo">Pausa</h2>
+        <p id="pausa-texto">O duelo espera por você.</p>
+        <div class="fim-acoes">
+          <button type="button" id="btn-pausa-voltar" class="btn btn--principal">Voltar ao duelo</button>
+          <button type="button" id="btn-pausa-som" class="btn btn--fantasma" aria-pressed="false">Som: ligado</button>
+          <button type="button" id="btn-pausa-sair" class="btn btn--texto">Sair para o início (fica salvo)</button>
+        </div>
       </div>
     </div>
 
@@ -230,7 +254,7 @@
     </div>
   </div>
 
-  <script type="module" src="js/arena3d.js?v=202610052040"></script>
-  <script defer src="js/jogo.js?v=202610052040"></script>
+  <script type="module" src="js/arena3d.js?v=202610060530"></script>
+  <script defer src="js/jogo.js?v=202610060530"></script>
 </body>
 </html>

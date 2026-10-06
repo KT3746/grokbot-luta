@@ -4,7 +4,7 @@ Jogo de luta em turnos, original, feito para o navegador. Você controla **Nara*
 
 Jogue online: [https://kt3746.github.io/grokbot-luta/](https://kt3746.github.io/grokbot-luta/)
 
-Versão **1.9.0** — wave 3: arena 3D sem caixas brancas, com guarda/flash/números presos ao boneco; botão Magia mostra a carga de essência e explica o que falta ao toque; selo **Finaliza** quando o golpe garante o K.O.; selo grande **K.O.!** (com "Perfeito" sem dano) e queda do rival em 3D. Wave 2: meta do dia / melhor sequência, juice de acerto preciso e Clarão, barras legíveis no celular. Arena Three.js r160 local; fallback clássico se WebGL falhar. Cache-bust `?v=202610052040`.
+Versão **1.10.0** — wave 4: **contra-golpe** (se a sua guarda segurar o golpe do rival, o próximo Atacar bate +40%, com selo no botão); **segure um botão** para ver o dano na barra do rival antes de agir (solte fora para cancelar; no mouse basta passar por cima); **leitura do rival** com as últimas 4 ações na placa dele; botão **Pausa** na luta e no Respiro (Esc/P), que congela o duelo e deixa sair para o início com a campanha salva. Wave 3: arena 3D sem caixas brancas, botão Magia com carga de essência, selo **Finaliza** e selo grande **K.O.!**. Wave 2: meta do dia / melhor sequência, juice de acerto preciso e Clarão, barras legíveis no celular. Arena Three.js r160 local; fallback clássico se WebGL falhar. Cache-bust `?v=202610060530`.
 
 ## Como jogar
 
@@ -22,7 +22,7 @@ Se você cair: **Tentar de novo** (mesmo círculo, com os reforços que já tinh
 
 O progresso da campanha, o som e a meta suave (vitórias do dia / sequência) ficam salvos neste aparelho (localStorage). Recarregar a página não apaga o meio da campanha. O tutorial **Como duelar** aparece sempre que você toca em **Começar campanha** ou **Nova campanha** (não aparece em **Continuar**).
 
-Atalhos no teclado, **só durante a luta** (não valem no título, no tutorial, no Respiro nem no fim de duelo): `1` / `A` atacar, `2` / `D` defender, `3` / `M` magia, `S` som. No Respiro, use o toque ou Enter/Espaço no reforço escolhido.
+Atalhos no teclado, **só durante a luta** (não valem no título, no tutorial, no Respiro nem no fim de duelo): `1` / `A` atacar, `2` / `D` defender, `3` / `M` magia, `S` som. `Esc` ou `P` abre/fecha a pausa (luta e Respiro). No Respiro, use o toque ou Enter/Espaço no reforço escolhido.
 
 ## Abrir no computador
 
