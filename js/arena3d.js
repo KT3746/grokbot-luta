@@ -1,7 +1,7 @@
-/* LUTA — arena Three.js baixo-poli (ESM). HUD HTML fica por cima. */
+/* LUTA - arena Three.js baixo-poli (ESM). HUD HTML fica por cima. */
 import * as THREE from 'three';
 
-const CACHE_V = '202610060530';
+const CACHE_V = '202610070428';
 const FOG = 0x12101c;
 
 const TEMAS = {

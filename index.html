@@ -10,13 +10,13 @@
   <meta name="apple-mobile-web-app-title" content="LUTA">
   <meta name="mobile-web-app-capable" content="yes">
   <title>LUTA</title>
-  <link rel="icon" href="favicon.svg?v=202610060530" type="image/svg+xml">
-  <link rel="manifest" href="manifest.webmanifest?v=202610060530">
-  <link rel="stylesheet" href="css/estilo.css?v=202610060530">
+  <link rel="icon" href="favicon.svg?v=202610070428" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest?v=202610070428">
+  <link rel="stylesheet" href="css/estilo.css?v=202610070428">
   <script type="importmap">
   {
     "imports": {
-      "three": "./js/vendor/three.module.js?v=202610060530"
+      "three": "./js/vendor/three.module.js?v=202610070428"
     }
   }
   </script>
@@ -46,8 +46,8 @@
       </div>
       <div class="titulo-art" aria-hidden="true">
         <div class="titulo-art__anel"></div>
-        <div class="titulo-art__nara"><img src="img/nara.webp?v=202610060530" alt=""></div>
-        <div class="titulo-art__rival"><img src="img/aurenegra.webp?v=202610060530" alt=""></div>
+        <div class="titulo-art__nara"><img src="img/nara.webp?v=202610070428" alt=""></div>
+        <div class="titulo-art__rival"><img src="img/aurenegra.webp?v=202610070428" alt=""></div>
         <ol class="titulo-art__pips">
           <li></li><li></li><li></li><li></li><li class="is-chefe"></li>
           <li></li><li></li><li></li><li class="is-chefe"></li><li class="is-chefe"></li>
@@ -60,7 +60,7 @@
         <button type="button" id="btn-comecar" class="btn btn--principal">Começar campanha</button>
         <button type="button" id="btn-nova" class="btn btn--fantasma" hidden>Nova campanha</button>
       </div>
-      <p class="titulo-dica">Toque grande, funciona no celular. Segure um botão para ver o dano. Atalhos: 1 Atacar · 2 Defender · 3 Magia · Esc pausa</p>
+      <p class="titulo-dica">Toque grande, funciona no celular. Segure um botão para ver o dano. Encadeie golpes para o combo. Atalhos: 1 Atacar · 2 Defender · 3 Magia · Esc pausa</p>
     </section>
 
     <section id="tela-luta" class="tela tela--luta" aria-label="Campo de duelo" hidden>
@@ -70,7 +70,7 @@
       </div>
 
       <div id="pausa-visibilidade" class="pausa-visibilidade" hidden role="status" aria-live="assertive">
-        <p class="pausa-visibilidade__txt"><strong>Pausado</strong> — volte a esta aba para continuar o duelo.</p>
+        <p class="pausa-visibilidade__txt"><strong>Pausado</strong>: volte a esta aba para continuar o duelo.</p>
       </div>
 
       <header class="hud">
@@ -78,6 +78,7 @@
           <div class="placa__topo">
             <h2 class="placa__nome" id="nome-jogador">Nara</h2>
             <span class="placa__papel">Você</span>
+            <span class="placa__perigo" id="chip-perigo" hidden>Perigo</span>
           </div>
           <div class="barra" data-tipo="vida">
             <div class="barra__rotulo"><span>Vida</span><span id="vida-jogador-txt">100</span></div>
@@ -96,6 +97,11 @@
         <div class="centro-turno" aria-live="polite">
           <p class="centro-turno__rodada" id="txt-rodada">Turno 1</p>
           <p class="centro-turno__vez" id="txt-vez">Sua vez</p>
+          <div class="combo" id="combo" hidden aria-live="polite">
+            <span class="combo__rotulo">Combo</span>
+            <strong class="combo__valor" id="combo-valor">×1</strong>
+            <ol class="combo__pips" id="combo-pips" aria-hidden="true"></ol>
+          </div>
         </div>
 
         <div class="placa placa--inimigo" id="placa-inimigo">
@@ -134,12 +140,16 @@
           <strong class="arena__ko-titulo" id="arena-ko-titulo">K.O.!</strong>
           <span class="arena__ko-sub" id="arena-ko-sub"></span>
         </div>
+        <div class="arena__vignette" id="arena-vignette" aria-hidden="true"></div>
+        <div class="banner-turno" id="banner-turno" hidden aria-live="assertive">
+          <strong class="banner-turno__txt" id="banner-turno-txt">Sua vez</strong>
+        </div>
 
         <div class="lutador lutador--nara" id="lutador-jogador" data-lado="aliado">
           <div class="lutador__sombra"></div>
           <div class="lutador__guarda" aria-hidden="true"></div>
           <div class="lutador__flash" aria-hidden="true"></div>
-          <img class="lutador__sprite" src="img/nara.webp?v=202610060530" alt="">
+          <img class="lutador__sprite" src="img/nara.webp?v=202610070428" alt="">
           <div class="flutuantes" id="flutuantes-jogador"></div>
         </div>
 
@@ -206,12 +216,13 @@
         <h2 id="tutorial-titulo">Como duelar</h2>
         <p class="tutorial-lead">Dez círculos. Um turno. Uma escolha.</p>
         <ul class="tutorial-lista">
-          <li><strong>Atacar</strong> — dano firme, sem gastar essência.</li>
-          <li><strong>Defender</strong> — aguenta o próximo golpe e recupera essência.</li>
-          <li><strong>Magia</strong> — golpe forte; custa essência e fura parte da guarda.</li>
-          <li><strong>Contra-golpe</strong> — se a sua guarda segurar o golpe do rival, o próximo Atacar bate +40%.</li>
+          <li><strong>Atacar</strong>: dano firme, sem gastar essência.</li>
+          <li><strong>Defender</strong>: aguenta o próximo golpe e recupera essência.</li>
+          <li><strong>Magia</strong>: golpe forte; custa essência e fura parte da guarda.</li>
+          <li><strong>Contra-golpe</strong>: se a sua guarda segurar o golpe do rival, o próximo Atacar bate +40%.</li>
+          <li><strong>Combo</strong>: encadeie Atacar/Magia sem tomar dano para subir o medidor.</li>
         </ul>
-        <p class="tutorial-dica">Segure um botão para ver o dano antes de agir. Solte fora para cancelar.</p>
+        <p class="tutorial-dica">Segure um botão para ver o dano antes de agir. Solte fora para cancelar. Em vida baixa aparece o aviso Perigo.</p>
         <p>O rival mostra o que vai fazer um instante antes do golpe. Entre lutas, descanse e pegue um reforço.</p>
         <button type="button" id="btn-entendi" class="btn btn--principal">Entendi</button>
       </div>
@@ -254,7 +265,7 @@
     </div>
   </div>
 
-  <script type="module" src="js/arena3d.js?v=202610060530"></script>
-  <script defer src="js/jogo.js?v=202610060530"></script>
+  <script type="module" src="js/arena3d.js?v=202610070428"></script>
+  <script defer src="js/jogo.js?v=202610070428"></script>
 </body>
 </html>

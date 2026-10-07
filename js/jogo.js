@@ -1,4 +1,4 @@
-/* LUTA — campanha de 10 círculos (Nara vs rivais originais). Visual 1.10.0 · Three.js arena. */
+/* LUTA - campanha de 10 círculos (Nara vs rivais originais). Visual 1.11.0 · Three.js arena. */
 (() => {
   "use strict";
 
@@ -10,8 +10,8 @@
     } catch (_) {}
   }
 
-  const VERSAO = "1.10.0";
-  const CACHE_V = "202610060530";
+  const VERSAO = "1.11.0";
+  const CACHE_V = "202610070428";
   const CHAVE = "duelo-rapido";
   const TOTAL_CIRCULOS = 10;
 
@@ -23,7 +23,7 @@
     rivalPreparaAtacar: "Rival prepara o golpe…",
     rivalPreparaDefender: "Rival levanta a guarda…",
     rivalPreparaMagia: "Rival canaliza magia…",
-    suaVezDrama: "Sua vez — escolha!",
+    suaVezDrama: "Sua vez: escolha!",
     turno: (n) => `Turno ${n}`,
     circulo: (n) => `Círculo ${n}/${TOTAL_CIRCULOS}`,
     voceAtacou: (dano, nome) => `Ataque: −${dano} em ${nome}.`,
@@ -47,9 +47,9 @@
     fimSeloLose: "Você caiu",
     fimSeloCampanha: "Dez círculos",
     inicioRelato: (titulo, nota) => `${titulo} entra no círculo. ${nota} Escolha o primeiro golpe.`,
-    suaVezCurta: "Sua vez — uma ação.",
+    suaVezCurta: "Sua vez: uma ação.",
     dicaMinuto: "Primeiro minuto: Atacar, Defender ou Magia. Some ao primeiro toque.",
-    pausadoAba: "Pausado — volte a esta aba para continuar.",
+    pausadoAba: "Pausado: volte a esta aba para continuar.",
     som: "Som",
     mudo: "Mudo",
     rival: "Rival",
@@ -59,7 +59,7 @@
     entradaChefeFinal: "Chefe final",
     entradaChefeTexto: (titulo, nota) => `${titulo} toma o círculo. ${nota}`,
     descansoSelo: (n) => `Círculo ${n}/${TOTAL_CIRCULOS} concluído`,
-    descansoTexto: "Nara recupera o fôlego. O próximo círculo já espera — escolha um reforço.",
+    descansoTexto: "Nara recupera o fôlego. O próximo círculo já espera: escolha um reforço.",
     proximo: "Próximo círculo",
     proximoChefe: "Próximo chefe",
     proximoFinal: "Chefe final",
@@ -94,6 +94,14 @@
     pausaTitulo: "Pausa",
     pausaLuta: (c, nome) => `Círculo ${c}/10 contra ${nome}. O duelo espera por você.`,
     pausaDescanso: (c) => `Respiro antes do círculo ${c}/10. Seu reforço espera.`,
+    /* Onda 5 */
+    combo: (n) => `Combo ×${n}`,
+    comboSelo: (n) => `Combo ×${n}!`,
+    bannerSuaVez: "Sua vez",
+    bannerVezRival: "Vez do rival",
+    perigo: "Perigo",
+    quaseSelo: "Quase!",
+    quaseRelato: "Quase! O rival mal se segura.",
   };
 
   const BONUS_CONTRA = 1.4;
@@ -211,7 +219,7 @@
       id: "ravo",
       nome: "Ravó",
       titulo: "Ravó Ígneo",
-      nota: "Berserker. Quase não defende — só avança.",
+      nota: "Berserker. Quase não defende; só avança.",
       vidaMax: 118,
       essenciaMax: 30,
       ataque: { min: 16, max: 21 },
@@ -491,6 +499,13 @@
     btnPausaSair: document.getElementById("btn-pausa-sair"),
     leitura: document.getElementById("leitura-rival"),
     leituraTrilha: document.getElementById("leitura-trilha"),
+    combo: document.getElementById("combo"),
+    comboValor: document.getElementById("combo-valor"),
+    comboPips: document.getElementById("combo-pips"),
+    chipPerigo: document.getElementById("chip-perigo"),
+    arenaVignette: document.getElementById("arena-vignette"),
+    bannerTurno: document.getElementById("banner-turno"),
+    bannerTurnoTxt: document.getElementById("banner-turno-txt"),
   };
 
   const estado = {
@@ -516,6 +531,8 @@
     leitura: [],
     previa: null,
     ignorarCliqueAte: 0,
+    combo: 0,
+    melhorComboLuta: 0,
   };
 
   function resetStats() {
@@ -764,7 +781,7 @@
     els.app.classList.toggle("is-pausado-aba", show);
     if (show && els.pausaVis.querySelector(".pausa-visibilidade__txt")) {
       els.pausaVis.querySelector(".pausa-visibilidade__txt").innerHTML =
-        "<strong>Pausado</strong> — volte a esta aba para continuar o duelo.";
+        "<strong>Pausado</strong>: volte a esta aba para continuar o duelo.";
     }
   }
 
@@ -1254,6 +1271,8 @@
     els.detalheMagia.textContent = `${j.magia.custo} essência · ${j.magia.min}–${j.magia.max}`;
     els.detalheDefender.textContent = `Guarda +${j.essenciaDefesa} essência`;
     pintarDicasAcoes(!els.btnAtacar.disabled && !estado.ocupado);
+    atualizarPerigo();
+    pintarCombo();
   }
 
   /* Onda 3: dano mínimo garante o K.O.? (crítico só aumenta, então é exato). */
@@ -1345,6 +1364,127 @@
     if (navigator.vibrate) navigator.vibrate(ms);
   }
 
+  /* ===== Onda 5: combo, banner de turno, ripple, perigo/quase ===== */
+  function pintarCombo() {
+    const n = estado.combo | 0;
+    if (!els.combo) return;
+    if (n < 2) {
+      els.combo.hidden = true;
+      els.combo.classList.remove("is-quente", "is-topo", "is-bump");
+      els.app.classList.remove("is-combo-quente");
+      if (els.comboValor) els.comboValor.textContent = "×1";
+      if (els.comboPips) els.comboPips.innerHTML = "";
+      return;
+    }
+    els.combo.hidden = false;
+    els.comboValor.textContent = `×${n}`;
+    els.combo.setAttribute("aria-label", TEXTO.combo(n));
+    els.combo.classList.toggle("is-quente", n >= 3);
+    els.combo.classList.toggle("is-topo", n >= 5);
+    els.app.classList.toggle("is-combo-quente", n >= 3);
+    if (els.comboPips) {
+      const maxPips = 5;
+      const filled = Math.min(maxPips, n);
+      els.comboPips.innerHTML = Array.from({ length: maxPips }, (_, i) =>
+        `<li class="combo__pip${i < filled ? " is-on" : ""}${i === filled - 1 ? " is-nova" : ""}"></li>`
+      ).join("");
+    }
+  }
+
+  function resetCombo(motivo) {
+    if ((estado.combo | 0) === 0) return;
+    estado.combo = 0;
+    pintarCombo();
+    if (motivo === "dano") {
+      els.combo?.classList.remove("is-quebra");
+      void els.combo?.offsetWidth;
+    }
+  }
+
+  function bumpCombo() {
+    estado.combo = (estado.combo | 0) + 1;
+    if (estado.combo > (estado.melhorComboLuta | 0)) estado.melhorComboLuta = estado.combo;
+    pintarCombo();
+    if (estado.combo >= 3) {
+      mostrarSeloJuice(TEXTO.comboSelo(estado.combo), "combo");
+      vibrar(estado.combo >= 5 ? [10, 30, 14, 30, 18] : [10, 40, 16]);
+      if (estado.audio && estado.audio.critico && estado.combo >= 5) estado.audio.critico();
+      else if (estado.audio && estado.audio.turno) estado.audio.turno();
+    } else if (estado.combo === 2) {
+      vibrar(10);
+    }
+    els.combo?.classList.remove("is-bump");
+    void els.combo?.offsetWidth;
+    els.combo?.classList.add("is-bump");
+    window.setTimeout(() => els.combo?.classList.remove("is-bump"), 320);
+  }
+
+  function mostrarBannerTurno(tipo) {
+    if (!els.bannerTurno || !els.bannerTurnoTxt) return;
+    if (prefersReduced()) return;
+    const txt = tipo === "rival" ? TEXTO.bannerVezRival : TEXTO.bannerSuaVez;
+    els.bannerTurnoTxt.textContent = txt;
+    els.bannerTurno.hidden = false;
+    els.bannerTurno.classList.remove("is-sua", "is-rival", "is-in");
+    void els.bannerTurno.offsetWidth;
+    els.bannerTurno.classList.add(tipo === "rival" ? "is-rival" : "is-sua", "is-in");
+    window.clearTimeout(mostrarBannerTurno._t);
+    mostrarBannerTurno._t = window.setTimeout(() => {
+      els.bannerTurno.classList.remove("is-in");
+      els.bannerTurno.hidden = true;
+    }, 720);
+  }
+
+  function atualizarPerigo() {
+    const j = estado.jogador;
+    const perigo = !!(j && j.vida > 0 && j.vida / j.vidaMax <= 0.25);
+    els.app.classList.toggle("is-perigo", perigo);
+    els.telaLuta?.classList.toggle("is-perigo", perigo);
+    els.placaJogador?.classList.toggle("is-perigo", perigo);
+    if (els.chipPerigo) {
+      els.chipPerigo.hidden = !perigo;
+      els.chipPerigo.textContent = TEXTO.perigo;
+    }
+    if (els.arenaVignette) {
+      els.arenaVignette.classList.toggle("is-on", perigo);
+    }
+  }
+
+  function checarQuase(alvoVidaAntes, alvoVidaDepois, alvoMax) {
+    if (alvoVidaDepois <= 0) return;
+    if (alvoVidaAntes <= 0) return;
+    const pct = alvoVidaDepois / alvoMax;
+    if (pct > 0.12) return;
+    if (alvoVidaAntes / alvoMax <= 0.12) return;
+    mostrarSeloJuice(TEXTO.quaseSelo, "quase");
+    vibrar([8, 40, 12]);
+    relatar(`${els.relato.textContent} ${TEXTO.quaseRelato}`);
+  }
+
+  async function hitStop(ms) {
+    if (prefersReduced()) return;
+    const dur = Math.max(40, Math.min(160, ms | 0));
+    els.app.classList.add("is-hitstop");
+    await esperar(dur);
+    els.app.classList.remove("is-hitstop");
+  }
+
+  function rippleNoBotao(btn, ev) {
+    if (!btn || prefersReduced()) return;
+    const rect = btn.getBoundingClientRect();
+    const x = (ev && ev.clientX != null ? ev.clientX : rect.left + rect.width / 2) - rect.left;
+    const y = (ev && ev.clientY != null ? ev.clientY : rect.top + rect.height / 2) - rect.top;
+    const onda = document.createElement("span");
+    onda.className = "acao__ripple";
+    const size = Math.max(rect.width, rect.height) * 2.2;
+    onda.style.width = `${size}px`;
+    onda.style.height = `${size}px`;
+    onda.style.left = `${x}px`;
+    onda.style.top = `${y}px`;
+    btn.appendChild(onda);
+    window.setTimeout(() => onda.remove(), 520);
+  }
+
   function prepararRivalVisual(rival) {
     els.corpoInimigo.innerHTML = ARTES[rival.id];
     els.lutadorInimigo.classList.toggle("is-chefe", !!rival.chefe);
@@ -1391,6 +1531,10 @@
     estado.inimigo = clonarLutador(rival);
     estado.rodada = 1;
     estado.lutaDanoTomado = 0;
+    estado.combo = 0;
+    estado.melhorComboLuta = 0;
+    pintarCombo();
+    atualizarPerigo();
     esconderKO();
     estado.ocupado = true;
     estado.fase = "luta";
@@ -1414,6 +1558,7 @@
     setBotoes(true);
     if (estado.audio) estado.audio.turno();
     els.txtVez.textContent = TEXTO.suaVezDrama;
+    mostrarBannerTurno("sua");
     if (document.activeElement && typeof document.activeElement.blur === "function") {
       const ae = document.activeElement;
       if (ae === els.btnComecar || ae === els.btnContinuar || ae === els.btnNova || ae === els.btnEntendi) {
@@ -1551,7 +1696,10 @@
         estado.audio.defender();
         estado.audio.cura();
       }
-      if (atorChave === "jogador") pulsarAcao("defender");
+      if (atorChave === "jogador") {
+        pulsarAcao("defender");
+        resetCombo("defesa");
+      }
       relatar(atorChave === "jogador" ? TEXTO.voceDefendeu(ganho) : TEXTO.inimigoDefendeu(ator.nome, ganho));
       soltarNumero(atorChave, TEXTO.recuouEssencia(ganho), "numero-flutuante--cura");
       pintarHud();
@@ -1566,6 +1714,7 @@
       }
       ator.essencia -= ator.magia.custo;
       const { valor } = danoBruto(ator, "magia");
+      const vidaAntesMag = alvo.vida;
       const resultado = aplicarDano(alvo, valor, ator.magia.perfuracao);
       if (ator.magia.dreno) {
         const roubo = Math.min(ator.magia.dreno, alvo.essencia);
@@ -1595,8 +1744,19 @@
         relatar(`${TEXTO.inimigoMagia(ator.nome, ator.magia.nome, resultado.dano)}${extra}`);
       }
       armarContra(atorChave, alvo, resultado);
+      if (atorChave === "jogador") {
+        bumpCombo();
+        checarQuase(vidaAntesMag, alvo.vida, alvo.vidaMax);
+      } else if (resultado.dano > 0) {
+        resetCombo("dano");
+        if (estado.jogador && estado.jogador.vida / estado.jogador.vidaMax <= 0.25) {
+          vibrar([18, 40, 22, 40, 28]);
+        }
+      }
       pintarHud();
       if (!resultado.bloqueado) mostrarSeloJuice(TEXTO.seloMagia, "magia");
+      if (atorChave === "jogador" && (estado.combo | 0) >= 3) await hitStop(70);
+      else if (ator.chefe) await hitStop(55);
       const hit = animar(elAlvo, "is-hit", ator.chefe ? 560 : 460, {
         tipo: "magia",
         forte: !!ator.chefe,
@@ -1609,6 +1769,7 @@
     if (contraAtivo) ator.contra = true;
     const { valor, critico, contra } = danoBruto(ator, "atacar");
     ator.contra = false;
+    const vidaAntesAtk = alvo.vida;
     const resultado = aplicarDano(alvo, valor, 0);
     if (estado.audio) estado.audio.atacar();
     if (atorChave === "jogador") pulsarAcao("atacar");
@@ -1639,10 +1800,21 @@
     if (resultado.bloqueado) partes.push(TEXTO.escudoAbsorveu);
     relatar(partes.join(" "));
     armarContra(atorChave, alvo, resultado);
+    if (atorChave === "jogador") {
+      bumpCombo();
+      checarQuase(vidaAntesAtk, alvo.vida, alvo.vidaMax);
+    } else if (resultado.dano > 0) {
+      resetCombo("dano");
+      if (estado.jogador && estado.jogador.vida / estado.jogador.vidaMax <= 0.25) {
+        vibrar([18, 40, 22, 40, 28]);
+      }
+    }
     pintarHud();
     const tipoFlash = critico || contra ? "critico" : resultado.bloqueado ? "guarda" : "ataque";
     if (critico) mostrarSeloJuice(TEXTO.seloCritico, "critico");
     else if (contra) mostrarSeloJuice(TEXTO.contraSelo, "contra");
+    if (critico || contra || (atorChave === "jogador" && (estado.combo | 0) >= 3)) await hitStop(critico || contra ? 90 : 60);
+    else if (ator.chefe) await hitStop(55);
     const hit = animar(elAlvo, "is-hit", critico || contra || ator.chefe ? 540 : 420, {
       critico: !!(critico || contra),
       tipo: tipoFlash,
@@ -1924,6 +2096,7 @@
 
     els.txtVez.textContent = TEXTO.vezInimigo;
     setVezInimigo(true);
+    mostrarBannerTurno("rival");
     pintarHud();
     void els.txtVez.offsetWidth;
     await esperar(420);
@@ -1949,6 +2122,7 @@
     els.arena.classList.add("is-rodada");
     els.txtVez.textContent = TEXTO.suaVezDrama;
     setVezInimigo(false);
+    mostrarBannerTurno("sua");
     pintarHud();
     relatar(
       estado.jogador.contra
@@ -2095,6 +2269,7 @@
     els.acoes.addEventListener("pointerdown", (ev) => {
       const btn = ev.target.closest("[data-acao]");
       if (!btn || btn.disabled || ev.button > 0) return;
+      rippleNoBotao(btn, ev);
       reset();
       botao = btn;
       timer = window.setTimeout(() => {
