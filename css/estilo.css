@@ -1,4 +1,4 @@
-/* LUTA — campanha de 10 círculos, HUD e ações em celular e desktop. */
+/* LUTA - campanha de 10 círculos, HUD e ações em celular e desktop. */
 :root {
   --fundo: #0a0c14;
   --fundo-2: #14182a;
@@ -1406,7 +1406,7 @@ button:focus-visible {
 }
 
 
-/* 1.3.0 — reforços tipados, a11y, feedback, resumo */
+/* 1.3.0 - reforços tipados, a11y, feedback, resumo */
 .skip-link {
   position: absolute;
   left: -999px;
@@ -1500,7 +1500,7 @@ button:focus-visible,
 }
 
 
-/* 1.4.0 — arena e lutadores mais sofisticados */
+/* 1.4.0 - arena e lutadores mais sofisticados */
 .arena {
   box-shadow: inset 0 -30px 50px rgba(0, 0, 0, 0.28), 0 12px 28px rgba(0, 0, 0, 0.28);
 }
@@ -1536,7 +1536,7 @@ button:focus-visible,
 }
 
 
-/* 1.5.1 — retratos do título não roubam clique dos botões */
+/* 1.5.1 - retratos do título não roubam clique dos botões */
 .titulo-art,
 .titulo-art * {
   pointer-events: none;
@@ -1548,7 +1548,7 @@ button:focus-visible,
 }
 
 
-/* 1.6.0 — combate mais vivo */
+/* 1.6.0 - combate mais vivo */
 .arena.is-flash-ataque .arena__flash {
   background: rgba(255, 140, 90, 0.28);
   animation: flash-arena 0.3s ease;
@@ -1631,7 +1631,7 @@ button:focus-visible,
 }
 
 
-/* 1.6.1 — legibilidade, turno claro, ações à mão */
+/* 1.6.1 - legibilidade, turno claro, ações à mão */
 .titulo-versao {
   margin: 6px 0 0;
   font-size: 0.78rem;
@@ -1699,7 +1699,7 @@ button:focus-visible,
 }
 
 
-/* 1.6.2 — cura do descanso sempre visível */
+/* 1.6.2 - cura do descanso sempre visível */
 .descanso-texto.is-cura {
   display: block !important;
   margin: 0 0 8px;
@@ -1726,7 +1726,7 @@ button:focus-visible,
 }
 
 
-/* 1.7.0 — polish de combate AAA-indie */
+/* 1.7.0 - polish de combate AAA-indie */
 .barra__trilha {
   position: relative;
   overflow: hidden;
@@ -1838,7 +1838,7 @@ button:focus-visible,
   }
 }
 
-/* ——— Arena Three.js ——— */
+/* --- Arena Three.js --- */
 .arena__canvas {
   position: absolute;
   inset: 0;
@@ -1962,7 +1962,7 @@ button:focus-visible,
 }
 
 
-/* ——— 1.8.2 polish: dica do 1º minuto, pause aba, juice, turn, touch ——— */
+/* --- 1.8.2 polish: dica do 1º minuto, pause aba, juice, turn, touch --- */
 .dica-minuto {
   margin: 0 0 8px;
   padding: 10px 12px;
@@ -2074,7 +2074,7 @@ button:focus-visible,
 }
 
 
-/* ——— 1.8.3 wave 2: meta diária, juice crítico/magia, HP mobile ——— */
+/* --- 1.8.3 wave 2: meta diária, juice crítico/magia, HP mobile --- */
 .titulo-meta {
   margin: 0 0 10px;
   padding: 8px 12px;
@@ -2651,4 +2651,251 @@ button:focus-visible,
     animation: none !important;
   }
   .arena__selo-juice.is-contra { opacity: 1; transform: translateX(-50%); }
+}
+
+/* ===== Onda 5 (1.11.0): combo, banner de turno, ripple, perigo/quase ===== */
+
+/* Medidor de combo no centro do HUD */
+.combo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 4px;
+  min-height: 22px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 180, 90, 0.35);
+  box-shadow: 0 0 12px rgba(255, 140, 60, 0.2);
+}
+.combo[hidden] { display: none !important; }
+.combo__rotulo {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ffc878;
+}
+.combo__valor {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #fff3d6;
+  text-shadow: 0 1px 0 #4a2208, 0 0 10px rgba(255, 160, 60, 0.7);
+  font-variant-numeric: tabular-nums;
+}
+.combo__pips {
+  display: flex;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.combo__pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 200, 120, 0.25);
+}
+.combo__pip.is-on {
+  background: linear-gradient(135deg, #ffe29a, #ff8a3a);
+  border-color: rgba(255, 220, 160, 0.85);
+  box-shadow: 0 0 6px rgba(255, 140, 60, 0.7);
+}
+.combo__pip.is-nova { animation: combo-pip-in 0.35s cubic-bezier(0.2, 1.4, 0.4, 1); }
+.combo.is-quente {
+  border-color: rgba(255, 120, 60, 0.75);
+  background: rgba(60, 18, 8, 0.7);
+  box-shadow: 0 0 18px rgba(255, 100, 40, 0.45);
+}
+.combo.is-topo {
+  border-color: rgba(255, 220, 120, 0.95);
+  animation: combo-topo 0.9s ease-in-out infinite;
+}
+.combo.is-bump { animation: combo-bump 0.32s cubic-bezier(0.2, 1.5, 0.4, 1); }
+@keyframes combo-pip-in {
+  0% { transform: scale(0.2); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes combo-bump {
+  0% { transform: scale(0.86); }
+  60% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+@keyframes combo-topo {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.25); }
+}
+.app.is-combo-quente .centro-turno {
+  box-shadow: 0 0 20px rgba(255, 120, 40, 0.25);
+}
+
+/* Banner de turno */
+.banner-turno {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  z-index: 12;
+  transform: translate(-50%, -50%) scale(0.7);
+  opacity: 0;
+  pointer-events: none;
+  padding: 10px 22px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 230, 180, 0.55);
+  background: linear-gradient(135deg, rgba(20, 14, 8, 0.92), rgba(50, 28, 10, 0.88));
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45), 0 0 24px rgba(232, 195, 106, 0.35);
+  white-space: nowrap;
+}
+.banner-turno[hidden] { display: none !important; }
+.banner-turno.is-in {
+  display: block !important;
+  animation: banner-turno-in 0.7s cubic-bezier(0.2, 1.2, 0.4, 1) forwards;
+}
+.banner-turno__txt {
+  font-size: clamp(1.15rem, 5.5vw, 1.65rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff3d6;
+  text-shadow: 0 2px 0 #3a2410, 0 0 12px rgba(255, 200, 100, 0.55);
+}
+.banner-turno.is-rival {
+  border-color: rgba(255, 120, 120, 0.55);
+  background: linear-gradient(135deg, rgba(36, 10, 12, 0.92), rgba(70, 18, 22, 0.88));
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45), 0 0 24px rgba(255, 90, 90, 0.35);
+}
+.banner-turno.is-rival .banner-turno__txt {
+  color: #ffd0d0;
+  text-shadow: 0 2px 0 #3a1010, 0 0 12px rgba(255, 100, 100, 0.55);
+}
+@keyframes banner-turno-in {
+  0% { opacity: 0; transform: translate(-50%, -40%) scale(0.6); }
+  25% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+  70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -58%) scale(0.96); }
+}
+
+/* Ripple de toque nos botões de ação */
+.acao__ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  background: radial-gradient(circle, rgba(255, 240, 200, 0.55) 0%, rgba(255, 200, 100, 0.18) 45%, transparent 70%);
+  pointer-events: none;
+  z-index: 2;
+  animation: acao-ripple 0.5s ease-out forwards;
+}
+.acao[data-acao="defender"] .acao__ripple {
+  background: radial-gradient(circle, rgba(180, 220, 255, 0.55) 0%, rgba(106, 168, 255, 0.18) 45%, transparent 70%);
+}
+.acao[data-acao="magia"] .acao__ripple {
+  background: radial-gradient(circle, rgba(230, 200, 255, 0.55) 0%, rgba(176, 140, 255, 0.2) 45%, transparent 70%);
+}
+@keyframes acao-ripple {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0.9; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+
+/* Perigo: vignette + chip */
+.placa--aliado { position: relative; }
+.placa__perigo {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 2;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #2a0608;
+  background: linear-gradient(135deg, #ffb0b0, #ff4d5e);
+  box-shadow: 0 0 12px rgba(255, 70, 80, 0.55);
+  animation: perigo-chip 0.9s ease-in-out infinite;
+}
+.placa__perigo[hidden] { display: none !important; }
+.placa--aliado.is-perigo .placa__papel {
+  visibility: hidden;
+}
+.arena__vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(ellipse at center, transparent 42%, rgba(120, 0, 10, 0.18) 72%, rgba(90, 0, 8, 0.55) 100%);
+  transition: opacity 0.35s ease;
+  mix-blend-mode: multiply;
+}
+.arena__vignette.is-on {
+  opacity: 1;
+  animation: vignette-pulso 1.2s ease-in-out infinite;
+}
+.tela--luta.is-perigo .placa--aliado,
+.app.is-perigo .placa--aliado.is-critica {
+  border-color: rgba(255, 70, 80, 0.85);
+  box-shadow: 0 0 22px rgba(255, 50, 60, 0.45);
+}
+@keyframes perigo-chip {
+  0%, 100% { filter: brightness(1); transform: scale(1); }
+  50% { filter: brightness(1.15); transform: scale(1.04); }
+}
+@keyframes vignette-pulso {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+
+/* Selo Quase! / Combo juice */
+.arena__selo-juice.is-quase {
+  color: #2a1200;
+  background: linear-gradient(135deg, #ffe29a, #ff8a3a);
+  border: 1px solid rgba(255, 240, 200, 0.9);
+  animation: selo-juice-in 0.45s ease-out;
+}
+.arena__selo-juice.is-combo {
+  color: #2a0e00;
+  background: linear-gradient(135deg, #ffd27a, #ff5a2a);
+  border: 1px solid rgba(255, 220, 160, 0.95);
+  box-shadow: 0 0 22px rgba(255, 100, 40, 0.55);
+  animation: selo-juice-in 0.45s ease-out;
+}
+
+/* Hit-stop: freeze visual breve */
+.app.is-hitstop {
+  filter: contrast(1.08) saturate(1.15);
+}
+.app.is-hitstop .arena {
+  animation: none !important;
+}
+.app.is-hitstop .lutador {
+  transition: none !important;
+}
+
+@media (orientation: landscape) and (max-height: 430px) {
+  .combo { margin-top: 2px; min-height: 16px; padding: 1px 6px; gap: 4px; }
+  .combo__valor { font-size: 0.8rem; }
+  .combo__pip { width: 5px; height: 5px; }
+  .combo__rotulo { font-size: 0.5rem; }
+  .banner-turno { padding: 6px 14px; top: 38%; }
+  .banner-turno__txt { font-size: 1rem; letter-spacing: 0.06em; }
+  .placa__perigo { font-size: 0.55rem; padding: 1px 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .combo.is-topo,
+  .combo.is-bump,
+  .combo__pip.is-nova,
+  .banner-turno.is-in,
+  .acao__ripple,
+  .placa__perigo,
+  .arena__vignette.is-on,
+  .arena__selo-juice.is-quase,
+  .arena__selo-juice.is-combo {
+    animation: none !important;
+  }
+  .banner-turno.is-in { opacity: 1; transform: translate(-50%, -50%); }
+  .arena__vignette.is-on { opacity: 1; }
 }
