@@ -1,4 +1,4 @@
-/* LUTA - campanha de 10 círculos (Nara vs rivais originais). Visual 1.11.0 · Three.js arena. */
+/* LUTA - campanha de 10 círculos (Nara vs rivais originais). Visual 1.12.0 · Three.js arena. */
 (() => {
   "use strict";
 
@@ -10,8 +10,8 @@
     } catch (_) {}
   }
 
-  const VERSAO = "1.11.0";
-  const CACHE_V = "202610070428";
+  const VERSAO = "1.12.0";
+  const CACHE_V = "202610142155";
   const CHAVE = "duelo-rapido";
   const TOTAL_CIRCULOS = 10;
 
@@ -1042,6 +1042,13 @@
     const no = document.createElement("span");
     no.className = `numero-flutuante ${classe}`;
     no.textContent = texto;
+    // Onda 6: número cresce com o tamanho do golpe
+    const m = /(\d+)/.exec(texto);
+    if (m && /dano|contra/.test(classe)) {
+      const v = Number(m[1]);
+      no.style.setProperty("--escala", String(Math.min(1.9, 0.85 + v / 30).toFixed(2)));
+      if (v >= 25) no.classList.add("numero-flutuante--grande");
+    }
     caixa.appendChild(no);
     setTimeout(() => no.remove(), 1500);
   }
@@ -1217,7 +1224,9 @@
       let estadoPip = "";
       if (i < estado.circulo) estadoPip = " is-feito";
       else if (i === estado.circulo) estadoPip = " is-atual";
-      return `<li class="${chefe}${estadoPip}"></li>`;
+      const est = lerEstrelas()[i] || 0;
+      const estHtml = est ? `<span class="pip-estrelas e${est}" aria-hidden="true">${"★".repeat(est)}</span>` : "";
+      return `<li class="${chefe}${estadoPip}${est === 3 ? " is-3estrelas" : ""}">${estHtml}</li>`;
     }).join("");
   }
 
@@ -1868,8 +1877,54 @@
         : TEXTO.koResumo(estado.rodada, estado.lutaDanoTomado)
       : TEXTO.koDerrotaSub(estado.inimigo ? estado.inimigo.nome : TEXTO.rival);
     el.className = `arena__ko ${vitoria ? "is-vitoria" : "is-derrota"}${perfeito ? " is-perfeito" : ""}${final ? " is-final" : ""}`;
+    // Onda 6: estrelas da luta (1 a 3) que acendem uma a uma
+    let estrelasEl = el.querySelector(".arena__ko-estrelas");
+    if (!estrelasEl) {
+      estrelasEl = document.createElement("span");
+      estrelasEl.className = "arena__ko-estrelas";
+      estrelasEl.setAttribute("aria-hidden", "true");
+      el.appendChild(estrelasEl);
+    }
+    if (vitoria) {
+      const n = estrelasDaLuta();
+      gravarEstrelas(estado.circulo, n);
+      estrelasEl.innerHTML = [0, 1, 2].map((i) => `<b class="${i < n ? "is-ganha" : ""}" style="--i:${i}">★</b>`).join("");
+      estrelasEl.hidden = false;
+      for (let i = 0; i < n; i++) setTimeout(() => vibrar(12 + i * 6), 280 + i * 260);
+    } else {
+      estrelasEl.hidden = true;
+    }
     el.hidden = false;
     els.arena.classList.add("is-ko");
+  }
+
+  /* Onda 6: 3★ = sem dano ou vitória rápida com pouca perda; 2★ = perdeu menos da metade; 1★ = venceu. */
+  function estrelasDaLuta() {
+    const max = (estado.jogador && estado.jogador.vidaMax) || 100;
+    const tomado = estado.lutaDanoTomado || 0;
+    if (tomado === 0 || (tomado <= max * 0.2 && estado.rodada <= 5)) return 3;
+    if (tomado < max * 0.5) return 2;
+    return 1;
+  }
+
+  function lerEstrelas() {
+    try {
+      const v = JSON.parse(localStorage.getItem("luta-estrelas") || "[]");
+      return Array.isArray(v) ? v : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function gravarEstrelas(circulo, n) {
+    const arr = lerEstrelas();
+    if ((arr[circulo] || 0) >= n) return;
+    arr[circulo] = n;
+    try {
+      localStorage.setItem("luta-estrelas", JSON.stringify(arr));
+    } catch (e) {
+      /* ok */
+    }
   }
 
   function esconderKO() {
