@@ -2899,3 +2899,17 @@ button:focus-visible,
   .banner-turno.is-in { opacity: 1; transform: translate(-50%, -50%); }
   .arena__vignette.is-on { opacity: 1; }
 }
+
+/* ===== Onda 6 (1.12.0): estrelas da luta, estrelas na campanha, dano em escala ===== */
+.arena__ko-estrelas { display: flex; gap: 6px; justify-content: center; margin-top: 6px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
+.arena__ko-estrelas[hidden] { display: none; }
+.arena__ko-estrelas b { color: rgba(243, 234, 216, 0.22); transform: scale(.8); }
+.arena__ko-estrelas b.is-ganha { color: var(--ouro, #e8c36a); opacity: 0; text-shadow: 0 0 16px rgba(232, 195, 106, .85);
+  animation: luta-estrela .42s cubic-bezier(.2, 1.7, .4, 1) forwards; animation-delay: calc(.28s + var(--i) * .26s); }
+@keyframes luta-estrela { 0% { opacity: 0; transform: scale(2.6) rotate(-40deg); } 100% { opacity: 1; transform: scale(1) rotate(0); } }
+.pips li { position: relative; }
+.pips li .pip-estrelas { position: absolute; left: 50%; top: -13px; transform: translateX(-50%); font-size: 9px; line-height: 1; letter-spacing: -1px; color: var(--ouro, #e8c36a); white-space: nowrap; text-shadow: 0 1px 2px #000; }
+.pips li.is-3estrelas { background: linear-gradient(90deg, var(--ouro, #e8c36a), #fff1c2); box-shadow: 0 0 8px rgba(232, 195, 106, .6); }
+.numero-flutuante { scale: var(--escala, 1); }
+.numero-flutuante--grande { text-shadow: 0 0 14px rgba(255, 120, 60, .9), 0 2px 0 #000; }
+@media (prefers-reduced-motion: reduce) { .arena__ko-estrelas b.is-ganha { animation: none; opacity: 1; transform: none; } }

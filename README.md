@@ -4,7 +4,7 @@ Jogo de luta em turnos, original, feito para o navegador. Você controla **Nara*
 
 Jogue online: [https://kt3746.github.io/grokbot-luta/](https://kt3746.github.io/grokbot-luta/)
 
-Versão **1.11.0** - wave 5: **medidor de combo** (encadeie Atacar/Magia sem tomar dano; selo e haptic a partir de ×3); **banner de turno** (Sua vez / Vez do rival) na troca; **ripple de toque** nos botões de ação; **Perigo** com vinheta e chip em vida baixa (≤25%) e selo **Quase!** quando o rival fica a um sopro do K.O.; hit-stop curto em crítico/combo. Wave 4: contra-golpe, prévia ao segurar o botão, leitura do rival, menu Pausa. Wave 3: arena 3D, Magia com carga, Finaliza, K.O.!. Wave 2: meta do dia / sequência, juice de acerto preciso e Clarão. Arena Three.js r160 local; fallback clássico se WebGL falhar. Cache-bust `?v=202610070428`.
+Versão **1.12.0** - wave 6: **estrelas da luta** (1 a 3 no K.O.), **estrelas na trilha da campanha**, **números de dano que crescem com o golpe**. Wave 5: **medidor de combo** (encadeie Atacar/Magia sem tomar dano; selo e haptic a partir de ×3); **banner de turno** (Sua vez / Vez do rival) na troca; **ripple de toque** nos botões de ação; **Perigo** com vinheta e chip em vida baixa (≤25%) e selo **Quase!** quando o rival fica a um sopro do K.O.; hit-stop curto em crítico/combo. Wave 4: contra-golpe, prévia ao segurar o botão, leitura do rival, menu Pausa. Wave 3: arena 3D, Magia com carga, Finaliza, K.O.!. Wave 2: meta do dia / sequência, juice de acerto preciso e Clarão. Arena Three.js r160 local; fallback clássico se WebGL falhar. Cache-bust `?v=202610142155`.
 
 ## Como jogar
 
