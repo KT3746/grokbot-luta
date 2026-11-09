@@ -1,4 +1,4 @@
-/* LUTA - campanha de 10 círculos (Nara vs rivais originais). Visual 1.12.0 · Three.js arena. */
+/* LUTA - campanha de 10 círculos (Nara vs rivais originais). Visual 1.13.0 · Three.js arena. */
 (() => {
   "use strict";
 
@@ -10,8 +10,8 @@
     } catch (_) {}
   }
 
-  const VERSAO = "1.12.0";
-  const CACHE_V = "202610142155";
+  const VERSAO = "1.13.0";
+  const CACHE_V = "202611090912";
   const CHAVE = "duelo-rapido";
   const TOTAL_CIRCULOS = 10;
 
@@ -99,6 +99,12 @@
     comboSelo: (n) => `Combo ×${n}!`,
     bannerSuaVez: "Sua vez",
     bannerVezRival: "Vez do rival",
+    /* Onda 7 */
+    seloGuarda: "Guarda!",
+    metaEstrelas: (n) => `★ ${n}/30 na campanha`,
+    metaEstrelasZero: "★ 0/30 na campanha",
+    koToque: "Toque para continuar",
+    magiaQuase: (n) => `Faltam ${n} · Defenda 1×`,
     perigo: "Perigo",
     quaseSelo: "Quase!",
     quaseRelato: "Quase! O rival mal se segura.",
@@ -588,6 +594,9 @@
     partes.push(m.vitoriasHoje > 0 ? TEXTO.metaHoje(m.vitoriasHoje) : TEXTO.metaHojeZero);
     if (m.sequencia > 0) partes.push(TEXTO.metaSeq(m.sequencia));
     if (m.melhorSequencia > 0) partes.push(TEXTO.metaMelhor(m.melhorSequencia));
+    /* Onda 7: total de estrelas da campanha na tela inicial */
+    const totalEst = lerEstrelas().reduce((s, n) => s + (n | 0), 0);
+    partes.push(totalEst > 0 ? TEXTO.metaEstrelas(totalEst) : TEXTO.metaEstrelasZero);
     el.textContent = partes.join(" · ");
   }
 
@@ -748,6 +757,101 @@
 
       document.addEventListener("visibilitychange", onVis);
       window.addEventListener("luta:pausa", onVis);
+      schedule();
+    });
+  }
+
+  /* Onda 7: toque/tecla pula a espera do K.O. */
+  function esperarKo(ms) {
+    const geracao = estado.geracao;
+    return new Promise((resolve) => {
+      let remaining = ms;
+      let start = performance.now();
+      let timer = null;
+      let acabou = false;
+
+      function limpar() {
+        if (timer != null) {
+          clearTimeout(timer);
+          timer = null;
+        }
+        document.removeEventListener("visibilitychange", onVis);
+        window.removeEventListener("luta:pausa", onVis);
+        document.removeEventListener("pointerdown", onSkip, true);
+        document.removeEventListener("keydown", onKey, true);
+      }
+
+      function done() {
+        if (acabou) return;
+        acabou = true;
+        limpar();
+        if (els.arenaKo) {
+          els.arenaKo.classList.remove("is-pode-pular");
+          const dica = els.arenaKo.querySelector(".arena__ko-toque");
+          if (dica) dica.hidden = true;
+        }
+        if (geracao !== estado.geracao) return;
+        resolve();
+      }
+
+      function schedule() {
+        if (timer != null) {
+          clearTimeout(timer);
+          timer = null;
+        }
+        if (pausado()) return;
+        start = performance.now();
+        timer = setTimeout(done, remaining);
+      }
+
+      function onVis() {
+        if (geracao !== estado.geracao) {
+          done();
+          return;
+        }
+        if (pausado()) {
+          if (timer != null) {
+            remaining = Math.max(0, remaining - (performance.now() - start));
+            clearTimeout(timer);
+            timer = null;
+          }
+        } else {
+          schedule();
+        }
+      }
+
+      function onSkip(ev) {
+        if (acabou || geracao !== estado.geracao) return;
+        if (pausado()) return;
+        /* Ignora o botão de pausa/som no canto */
+        const t = ev.target;
+        if (t && t.closest && t.closest("#btn-pausa, #btn-som, #modal-pausa")) return;
+        ev.preventDefault();
+        done();
+      }
+
+      function onKey(ev) {
+        if (acabou || geracao !== estado.geracao || pausado()) return;
+        /* Esc / P ficam com a pausa; espaço, Enter ou seta pulam o K.O. */
+        if (ev.key === "Escape" || ev.key === "p" || ev.key === "P") return;
+        if (ev.key === " " || ev.key === "Enter" || ev.key === "ArrowDown") {
+          ev.preventDefault();
+          done();
+        }
+      }
+
+      if (els.arenaKo) {
+        els.arenaKo.classList.add("is-pode-pular");
+        const dica = els.arenaKo.querySelector(".arena__ko-toque");
+        if (dica) {
+          dica.textContent = TEXTO.koToque;
+          dica.hidden = false;
+        }
+      }
+      document.addEventListener("visibilitychange", onVis);
+      window.addEventListener("luta:pausa", onVis);
+      document.addEventListener("pointerdown", onSkip, true);
+      document.addEventListener("keydown", onKey, true);
       schedule();
     });
   }
@@ -1304,9 +1408,15 @@
     const carga = Math.max(0, Math.min(1, j.essencia / j.magia.custo));
     els.btnMagia.style.setProperty("--carga", carga.toFixed(3));
     els.btnMagia.classList.toggle("is-curta", curta);
+    /* Onda 7: pulsa quando um Defender basta para liberar o Clarão */
+    const faltaMag = curta ? j.magia.custo - j.essencia : 0;
+    const quasePronta = curta && faltaMag > 0 && faltaMag <= j.essenciaDefesa;
+    els.btnMagia.classList.toggle("is-quase-pronta", quasePronta);
     els.btnMagia.setAttribute("aria-disabled", curta ? "true" : "false");
     if (curta) {
-      els.detalheMagia.textContent = TEXTO.magiaFalta(j.magia.custo - j.essencia);
+      els.detalheMagia.textContent = quasePronta
+        ? TEXTO.magiaQuase(faltaMag)
+        : TEXTO.magiaFalta(faltaMag);
     }
     const koAtk = !!(ativos && i && koGarantido(j, i, "atacar"));
     const koMag = !!(ativos && i && !koAtk && koGarantido(j, i, "magia"));
@@ -1931,6 +2041,8 @@
     if (els.arenaKo) {
       els.arenaKo.hidden = true;
       els.arenaKo.className = "arena__ko";
+      const dica = els.arenaKo.querySelector(".arena__ko-toque");
+      if (dica) dica.hidden = true;
     }
     els.arena.classList.remove("is-ko");
   }
@@ -1943,7 +2055,7 @@
       mostrarKO(true);
       if (estado.audio) estado.audio.vitoria();
       vibrar([30, 50, 70]);
-      await esperar(prefersReduced() ? 900 : 1300);
+      await esperarKo(prefersReduced() ? 900 : 1300);
       els.arena.classList.remove("is-vitoria-arena");
       esconderKO();
       if (estado.circulo >= TOTAL_CIRCULOS - 1) {
@@ -1969,7 +2081,7 @@
     mostrarKO(false);
     if (estado.audio) estado.audio.derrota();
     vibrar([60, 40, 60]);
-    await esperar(prefersReduced() ? 700 : 1000);
+    await esperarKo(prefersReduced() ? 700 : 1000);
     estado.fase = "luta";
     registrarDerrotaMeta();
     gravarCampanha();
@@ -2197,6 +2309,9 @@
     if (alvo.vida <= 0) return;
     alvo.contra = true;
     soltarNumero("jogador", "Contra!", "numero-flutuante--contra");
+    /* Onda 7: selo Guarda! quando a defesa segura o golpe */
+    mostrarSeloJuice(TEXTO.seloGuarda, "guarda");
+    vibrar([10, 30, 18]);
   }
 
   /* ===== Onda 4: leitura do rival (últimas ações) ===== */
