@@ -2913,3 +2913,49 @@ button:focus-visible,
 .numero-flutuante { scale: var(--escala, 1); }
 .numero-flutuante--grande { text-shadow: 0 0 14px rgba(255, 120, 60, .9), 0 2px 0 #000; }
 @media (prefers-reduced-motion: reduce) { .arena__ko-estrelas b.is-ganha { animation: none; opacity: 1; transform: none; } }
+
+
+/* ===== Onda 7 (1.13.0): Guarda!, Magia quase, toque no K.O., estrelas no título ===== */
+.arena__selo-juice.is-guarda {
+  color: #9fd6ff;
+  text-shadow: 0 0 18px rgba(100, 180, 255, .9), 0 2px 0 #000;
+  animation: selo-juice-in 0.45s ease-out;
+}
+.acao.is-quase-pronta:not(:disabled) {
+  box-shadow: 0 0 0 2px rgba(120, 200, 255, .55), 0 0 18px rgba(80, 160, 255, .35);
+  animation: luta-quase-pronta 1.1s ease-in-out infinite;
+}
+.acao.is-quase-pronta:not(:disabled) .acao__detalhe {
+  color: #9fd6ff;
+  font-weight: 700;
+}
+@keyframes luta-quase-pronta {
+  0%, 100% { transform: translateY(0); filter: brightness(1); }
+  50% { transform: translateY(-2px); filter: brightness(1.12); }
+}
+.arena__ko-toque {
+  display: block;
+  margin-top: 10px;
+  font-size: clamp(12px, 3.4vw, 15px);
+  letter-spacing: .04em;
+  opacity: .72;
+  color: rgba(243, 234, 216, .9);
+  text-shadow: 0 1px 2px #000;
+}
+.arena__ko-toque[hidden] { display: none; }
+.arena__ko.is-pode-pular { cursor: pointer; }
+.arena__ko.is-pode-pular .arena__ko-toque {
+  animation: luta-ko-toque 1.4s ease-in-out infinite;
+}
+@keyframes luta-ko-toque {
+  0%, 100% { opacity: .55; }
+  50% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .acao.is-quase-pronta:not(:disabled),
+  .arena__ko.is-pode-pular .arena__ko-toque,
+  .arena__selo-juice.is-guarda {
+    animation: none !important;
+  }
+  .arena__selo-juice.is-guarda { opacity: 1; transform: translateX(-50%); }
+}
