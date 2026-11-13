@@ -2959,3 +2959,182 @@ button:focus-visible,
   }
   .arena__selo-juice.is-guarda { opacity: 1; transform: translateX(-50%); }
 }
+
+/* ===== Onda 8: intenção do rival ===== */
+.intencao {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 20px);
+  padding: 6px 12px 6px 8px;
+  border-radius: 14px;
+  background: rgba(10, 12, 20, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+  color: #f3ead8;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.intencao[hidden] { display: none; }
+.intencao__icone {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  position: relative;
+}
+.intencao__icone::before {
+  content: "";
+  width: 20px;
+  height: 20px;
+  background: currentColor;
+  -webkit-mask: var(--intencao-mask) center / contain no-repeat;
+  mask: var(--intencao-mask) center / contain no-repeat;
+}
+.intencao__txt { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
+.intencao__txt small {
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.intencao__txt b { font-size: 1rem; font-weight: 900; white-space: nowrap; }
+.intencao--atacar {
+  --intencao-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M3 21 L8 16 L10 18 L5 23 Z M13 3 L21 11 L19 13 L16 10 L10 16 L8 14 L14 8 L11 5 Z'/%3E%3C/svg%3E");
+  border-color: rgba(255, 140, 90, 0.75);
+}
+.intencao--atacar .intencao__icone { color: #ffb27a; background: rgba(255, 120, 60, 0.18); }
+.intencao--atacar b { color: #ffcf9e; }
+.intencao--magia {
+  --intencao-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M12 2 L14 9 L21 12 L14 15 L12 22 L10 15 L3 12 L10 9 Z'/%3E%3C/svg%3E");
+  border-color: rgba(200, 150, 255, 0.8);
+}
+.intencao--magia .intencao__icone { color: #e9b3ff; background: rgba(160, 100, 255, 0.22); }
+.intencao--magia b { color: #f0d4ff; }
+.intencao--defender {
+  --intencao-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M12 2 L20 6 V12 C20 17 16 20.5 12 22 C8 20.5 4 17 4 12 V6 Z'/%3E%3C/svg%3E");
+  border-color: rgba(140, 200, 255, 0.75);
+}
+.intencao--defender .intencao__icone { color: #9ecbff; background: rgba(90, 160, 255, 0.2); }
+.intencao--defender b { color: #cfe6ff; }
+.intencao--oculta { border-color: rgba(255, 255, 255, 0.3); }
+.intencao--oculta .intencao__icone::before { display: none; }
+.intencao--oculta .intencao__icone::after {
+  content: "?";
+  font-weight: 900;
+  font-size: 1.15rem;
+  color: #e8dcc0;
+}
+.intencao--oculta b { color: #d8cfbd; font-weight: 700; }
+.intencao.is-nova { animation: intencao-in 0.42s cubic-bezier(0.2, 1.4, 0.4, 1); }
+.intencao.is-agindo { transform: scale(1.06); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35), 0 10px 26px rgba(0, 0, 0, 0.5); }
+.intencao--atacar.is-agindo, .intencao--magia.is-agindo { animation: intencao-agindo 0.5s ease-in-out infinite alternate; }
+@keyframes intencao-in {
+  0% { opacity: 0; transform: translateY(-8px) scale(0.85); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes intencao-agindo {
+  from { transform: scale(1.02); }
+  to { transform: scale(1.09); }
+}
+
+/* Defender sabe que vai bloquear */
+.acao__selo--bloqueia {
+  color: #06172e;
+  background: linear-gradient(135deg, #d6ecff, #6fb3ff);
+  box-shadow: 0 2px 10px rgba(111, 179, 255, 0.6);
+}
+.acao.is-bloqueia:not(:disabled) .acao__selo--bloqueia { opacity: 1; transform: scale(1); }
+.tela--luta.is-sua-vez .acao.is-bloqueia:not(:disabled),
+.acao.is-bloqueia:not(:disabled) {
+  border-color: rgba(140, 200, 255, 0.85);
+  box-shadow: inset 0 -3px 0 #6fb3ff, 0 0 0 1px rgba(111, 179, 255, 0.45), 0 0 18px rgba(111, 179, 255, 0.3);
+}
+
+/* Dica do primeiro minuto flutua na arena: não empurra os botões */
+.arena .dica-minuto {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  z-index: 9;
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 0.82rem;
+  pointer-events: none;
+  animation: intencao-in 0.4s ease-out;
+}
+.arena .dica-minuto[hidden] { display: none; }
+
+/* Descanso: estrelas, dica do rival, atributo que subiu */
+.descanso-selo__estrelas {
+  margin-left: 8px;
+  color: #ffd76a;
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 10px rgba(255, 215, 106, 0.55);
+}
+.proximo-rival__dica {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: #cfe6ff;
+}
+.descanso-chip.is-subiu {
+  border-color: rgba(120, 240, 170, 0.8);
+  background: linear-gradient(135deg, rgba(60, 200, 130, 0.22), rgba(20, 28, 48, 0.9));
+  animation: chip-subiu 0.6s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.descanso-chip.is-subiu .descanso-chip__v { color: #a8ffd0; font-weight: 800; }
+@keyframes chip-subiu {
+  0% { transform: scale(0.9); }
+  60% { transform: scale(1.05); }
+  100% { transform: none; }
+}
+
+@media (max-width: 430px) {
+  .intencao { top: 8px; right: 8px; padding: 5px 10px 5px 6px; gap: 6px; }
+  .intencao__icone { width: 26px; height: 26px; }
+  .intencao__icone::before { width: 17px; height: 17px; }
+  .intencao__txt b { font-size: 0.9rem; }
+}
+@media (orientation: landscape) and (max-height: 430px) {
+  .intencao { top: 6px; right: 6px; padding: 4px 8px 4px 5px; }
+  .intencao__icone { width: 22px; height: 22px; }
+  .intencao__txt small { font-size: 0.58rem; }
+  .intencao__txt b { font-size: 0.82rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .intencao.is-nova, .intencao.is-agindo, .descanso-chip.is-subiu, .arena .dica-minuto { animation: none !important; }
+}
+
+/* Onda 8: o selo do Respiro não encosta nos botões Pausa/Som */
+@media (max-width: 430px), (max-height: 740px) {
+  .tela--descanso { padding-top: calc(62px + var(--safe-t)); }
+}
+/* Onda 8: tutorial sempre cabe (rola se a tela for baixa) */
+#modal-tutorial .modal__caixa {
+  max-height: calc(100dvh - 32px - var(--safe-t) - var(--safe-b));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+@media (max-height: 760px) {
+  #modal-tutorial .tutorial-lista li { padding-top: 4px; padding-bottom: 4px; line-height: 1.3; }
+}
+/* Depois de escolher o reforço, só o que subiu fica verde */
+.descanso-status.is-escolhido .descanso-chip:first-child:not(.is-subiu) {
+  border-color: var(--linha);
+  background: var(--vidro);
+}
+.descanso-status.is-escolhido .descanso-chip:first-child:not(.is-subiu) .descanso-chip__v { color: inherit; }

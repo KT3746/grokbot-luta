@@ -10,13 +10,13 @@
   <meta name="apple-mobile-web-app-title" content="LUTA">
   <meta name="mobile-web-app-capable" content="yes">
   <title>LUTA</title>
-  <link rel="icon" href="favicon.svg?v=202611090912" type="image/svg+xml">
-  <link rel="manifest" href="manifest.webmanifest?v=202611090912">
-  <link rel="stylesheet" href="css/estilo.css?v=202611090912">
+  <link rel="icon" href="favicon.svg?v=202611122130" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest?v=202611122130">
+  <link rel="stylesheet" href="css/estilo.css?v=202611122130">
   <script type="importmap">
   {
     "imports": {
-      "three": "./js/vendor/three.module.js?v=202611090912"
+      "three": "./js/vendor/three.module.js?v=202611122130"
     }
   }
   </script>
@@ -46,8 +46,8 @@
       </div>
       <div class="titulo-art" aria-hidden="true">
         <div class="titulo-art__anel"></div>
-        <div class="titulo-art__nara"><img src="img/nara.webp?v=202611090912" alt=""></div>
-        <div class="titulo-art__rival"><img src="img/aurenegra.webp?v=202611090912" alt=""></div>
+        <div class="titulo-art__nara"><img src="img/nara.webp?v=202611122130" alt=""></div>
+        <div class="titulo-art__rival"><img src="img/aurenegra.webp?v=202611122130" alt=""></div>
         <ol class="titulo-art__pips">
           <li></li><li></li><li></li><li></li><li class="is-chefe"></li>
           <li></li><li></li><li></li><li class="is-chefe"></li><li class="is-chefe"></li>
@@ -146,11 +146,19 @@
           <strong class="banner-turno__txt" id="banner-turno-txt">Sua vez</strong>
         </div>
 
+        <div class="intencao" id="intencao-rival" hidden role="status" aria-live="polite">
+          <span class="intencao__icone" aria-hidden="true"></span>
+          <span class="intencao__txt"><small id="intencao-quem">Liro vai</small><b id="intencao-acao">Atacar</b></span>
+        </div>
+        <div id="dica-minuto" class="dica-minuto" hidden role="status" aria-live="polite">
+          <p class="dica-minuto__txt"><strong>Primeiro minuto:</strong> olhe no canto o que o rival vai fazer e escolha <em>Atacar</em>, <em>Defender</em> ou <em>Magia</em>.</p>
+        </div>
+
         <div class="lutador lutador--nara" id="lutador-jogador" data-lado="aliado">
           <div class="lutador__sombra"></div>
           <div class="lutador__guarda" aria-hidden="true"></div>
           <div class="lutador__flash" aria-hidden="true"></div>
-          <img class="lutador__sprite" src="img/nara.webp?v=202611090912" alt="">
+          <img class="lutador__sprite" src="img/nara.webp?v=202611122130" alt="">
           <div class="flutuantes" id="flutuantes-jogador"></div>
         </div>
 
@@ -165,9 +173,6 @@
 
       <p class="relato" id="relato" aria-live="polite">O círculo se fecha. Escolha o primeiro golpe.</p>
 
-      <div id="dica-minuto" class="dica-minuto" hidden role="status" aria-live="polite">
-        <p class="dica-minuto__txt"><strong>Primeiro minuto:</strong> escolha <em>Atacar</em>, <em>Defender</em> ou <em>Magia</em>. Some ao primeiro toque.</p>
-      </div>
 
       <div class="acoes" id="acoes">
         <button type="button" class="acao" data-acao="atacar" id="btn-atacar" aria-label="Atacar">
@@ -181,6 +186,7 @@
           <span class="acao__icone" aria-hidden="true"></span>
           <span class="acao__nome">Defender</span>
           <span class="acao__detalhe" id="detalhe-defender">Guarda + essência</span>
+          <span class="acao__selo acao__selo--bloqueia" aria-hidden="true">Bloqueia</span>
         </button>
         <button type="button" class="acao" data-acao="magia" id="btn-magia" aria-label="Magia">
           <span class="acao__icone" aria-hidden="true"></span>
@@ -218,13 +224,14 @@
         <p class="tutorial-lead">Dez círculos. Um turno. Uma escolha.</p>
         <ul class="tutorial-lista">
           <li><strong>Atacar</strong>: dano firme, sem gastar essência.</li>
-          <li><strong>Defender</strong>: aguenta o próximo golpe e recupera essência.</li>
+          <li><strong>Defender</strong>: segura o próximo golpe e recupera essência.</li>
           <li><strong>Magia</strong>: golpe forte; custa essência e fura parte da guarda.</li>
-          <li><strong>Contra-golpe</strong>: se a sua guarda segurar o golpe do rival, o próximo Atacar bate +40%.</li>
-          <li><strong>Combo</strong>: encadeie Atacar/Magia sem tomar dano para subir o medidor.</li>
+          <li><strong>Leia o rival</strong>: o canto da arena mostra o que ele vai fazer. Se ele vai bater, defenda.</li>
+          <li><strong>Contra-golpe</strong>: se a guarda segurar o golpe, o próximo Atacar bate +40%.</li>
+          <li><strong>Combo</strong>: Atacar ou Magia seguidos, sem tomar dano.</li>
         </ul>
-        <p class="tutorial-dica">Segure um botão para ver o dano antes de agir. Solte fora para cancelar. Em vida baixa aparece o aviso Perigo.</p>
-        <p>O rival mostra o que vai fazer um instante antes do golpe. Entre lutas, descanse e pegue um reforço.</p>
+        <p class="tutorial-dica">Segure um botão para ver o dano antes de agir. Chefes às vezes escondem a jogada.</p>
+        <p>Entre lutas, descanse e pegue um reforço.</p>
         <button type="button" id="btn-entendi" class="btn btn--principal">Entendi</button>
       </div>
     </div>
@@ -266,7 +273,7 @@
     </div>
   </div>
 
-  <script type="module" src="js/arena3d.js?v=202611090912"></script>
-  <script defer src="js/jogo.js?v=202611090912"></script>
+  <script type="module" src="js/arena3d.js?v=202611122130"></script>
+  <script defer src="js/jogo.js?v=202611122130"></script>
 </body>
 </html>

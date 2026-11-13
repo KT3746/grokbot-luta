@@ -1,4 +1,4 @@
-/* LUTA - campanha de 10 círculos (Nara vs rivais originais). Visual 1.13.0 · Three.js arena. */
+/* LUTA - campanha de 10 círculos (Nara vs rivais originais). Visual 1.14.0 · Three.js arena. */
 (() => {
   "use strict";
 
@@ -10,8 +10,8 @@
     } catch (_) {}
   }
 
-  const VERSAO = "1.13.0";
-  const CACHE_V = "202611090912";
+  const VERSAO = "1.14.0";
+  const CACHE_V = "202611122130";
   const CHAVE = "duelo-rapido";
   const TOTAL_CIRCULOS = 10;
 
@@ -87,7 +87,8 @@
     previaMagia: (min, max, nome, restoMin, restoMax, custo) =>
       `Clarão: ${min}–${max} de dano (${custo} essência). ${nome} fica com ${restoMin}–${restoMax}.`,
     previaMagiaCurta: (falta) => `Clarão: faltam ${falta} de essência. Defenda para recarregar.`,
-    previaDefender: (ganho, pct) => `Defender: +${ganho} essência e o próximo golpe perde ${pct}%.`,
+    previaDefender: (ganho, pct, bloqueia) =>
+      `Defender: ${ganho > 0 ? `+${ganho} essência` : "essência já cheia"} e o próximo golpe perde ${pct}%.${bloqueia ? " O rival vai bater: isso arma o contra-golpe." : ""}`,
     previaKO: " Garante o K.O.!",
     previaSolte: " Solte fora do botão para cancelar.",
     leituraVazia: "Sem leitura ainda",
@@ -108,6 +109,27 @@
     perigo: "Perigo",
     quaseSelo: "Quase!",
     quaseRelato: "Quase! O rival mal se segura.",
+    /* Onda 8 */
+    intencaoQuem: (nome) => `${nome} vai`,
+    intencaoOcultaQuem: (nome) => `${nome} esconde`,
+    intencaoAcao: { atacar: "Atacar", defender: "Defender", magia: "Lançar magia" },
+    intencaoOculta: "a jogada",
+    intencaoRelato: {
+      atacar: (nome) => `${nome} vai atacar. Defender segura o golpe e arma o contra.`,
+      magia: (nome, magia) => `${nome} vai lançar ${magia}. Defender segura parte da magia e arma o contra.`,
+      defender: (nome) => `${nome} vai se defender. Seu golpe entra cheio agora.`,
+      oculta: (nome) => `${nome} esconde a jogada. Fique atento.`,
+    },
+    dicaEstilo: {
+      agressivo: "Bate quase todo turno. Defenda quando ele for atacar e responda com o contra.",
+      astuto: "Gosta de magia e rouba essência. Guarde essência para o seu Clarão.",
+      defensivo: "Se fecha na guarda. Quando ele defender, use Magia: fura a guarda.",
+      tanque: "Aguenta muito e bate pesado. Contra-golpes e Magia aceleram a luta.",
+      mago: "Usa magia sempre que pode. Defenda quando a magia vier.",
+      berserker: "Ataca sem parar. Cada Defender bem lido vira um contra forte.",
+      chefe: "Às vezes esconde a jogada. Mantenha vida e essência em dia.",
+    },
+    descansoEstrelas: (n) => `${"★".repeat(n)}${"☆".repeat(3 - n)}`,
   };
 
   const BONUS_CONTRA = 1.4;
@@ -493,6 +515,9 @@
     proximoNota: document.getElementById("proximo-nota"),
     melhorias: document.getElementById("melhorias"),
     dicaMinuto: document.getElementById("dica-minuto"),
+    intencao: document.getElementById("intencao-rival"),
+    intencaoQuem: document.getElementById("intencao-quem"),
+    intencaoAcao: document.getElementById("intencao-acao"),
     pausaVis: document.getElementById("pausa-visibilidade"),
     arenaKo: document.getElementById("arena-ko"),
     arenaKoTitulo: document.getElementById("arena-ko-titulo"),
@@ -539,6 +564,8 @@
     ignorarCliqueAte: 0,
     combo: 0,
     melhorComboLuta: 0,
+    intencao: null,
+    ultimasEstrelas: 0,
   };
 
   function resetStats() {
@@ -1639,6 +1666,7 @@
       estado.jogador.essencia = estado.jogador.essenciaMax;
     }
     estado.geracao += 1;
+    const geracao = estado.geracao;
     fecharPausa(true);
     limparPrevia();
     estado.jogador.guarda = false;
@@ -1652,6 +1680,7 @@
     estado.lutaDanoTomado = 0;
     estado.combo = 0;
     estado.melhorComboLuta = 0;
+    limparIntencao();
     pintarCombo();
     atualizarPerigo();
     esconderKO();
@@ -1673,7 +1702,10 @@
     if (rival.chefe) {
       await mostrarEntradaChefe(rival);
     }
+    if (geracao !== estado.geracao) return;
     estado.ocupado = false;
+    preverIntencao();
+    relatar(`${TEXTO.inicioRelato(rival.titulo, rival.nota)} ${relatoIntencao()}`);
     setBotoes(true);
     if (estado.audio) estado.audio.turno();
     els.txtVez.textContent = TEXTO.suaVezDrama;
@@ -1997,6 +2029,7 @@
     }
     if (vitoria) {
       const n = estrelasDaLuta();
+      estado.ultimasEstrelas = n;
       gravarEstrelas(estado.circulo, n);
       estrelasEl.innerHTML = [0, 1, 2].map((i) => `<b class="${i < n ? "is-ganha" : ""}" style="--i:${i}">★</b>`).join("");
       estrelasEl.hidden = false;
@@ -2048,6 +2081,7 @@
   }
 
   async function encerrar(vitoria) {
+    limparIntencao();
     if (vitoria) {
       els.lutadorInimigo.classList.add("is-cair");
       els.arena.classList.add("is-vitoria-arena");
@@ -2125,14 +2159,37 @@
     return escolhidas.slice(0, 3);
   }
 
-  function placaStatus(titulo, valor) {
-    return `<span class="descanso-chip"><span class="descanso-chip__k">${titulo}</span><span class="descanso-chip__v">${valor}</span></span>`;
+  function placaStatus(titulo, valor, subiu) {
+    return `<span class="descanso-chip${subiu ? " is-subiu" : ""}"><span class="descanso-chip__k">${titulo}</span><span class="descanso-chip__v">${valor}</span></span>`;
+  }
+
+  function fotoStatus(j) {
+    return {
+      Vida: `${j.vida}/${j.vidaMax}`,
+      Essência: `${j.essencia}/${j.essenciaMax}`,
+      Ataque: `${j.ataque.min}–${j.ataque.max}`,
+      Magia: `${j.magia.min}–${j.magia.max} · custo ${j.magia.custo}`,
+      "Acerto preciso": `${Math.round(j.critico * 100)}%`,
+      Guarda: `−${Math.round(j.guardaReducao * 100)}% de dano`,
+      "Defender recarrega": `+${j.essenciaDefesa} essência`,
+      "Fura guarda": `${Math.round(j.magia.perfuracao * 100)}%`,
+    };
   }
 
   function pintarDescanso() {
     const j = estado.jogador;
     const proximo = rivalAtual();
     els.descansoSelo.textContent = TEXTO.descansoSelo(estado.circulo);
+    /* Onda 8: estrelas da luta que acabou de terminar */
+    let estrelasSelo = els.descansoSelo.querySelector(".descanso-selo__estrelas");
+    const nEstrelas = estado.ultimasEstrelas | 0;
+    if (nEstrelas > 0) {
+      estrelasSelo = document.createElement("span");
+      estrelasSelo.className = "descanso-selo__estrelas";
+      estrelasSelo.textContent = TEXTO.descansoEstrelas(nEstrelas);
+      estrelasSelo.setAttribute("aria-label", `${nEstrelas} de 3 estrelas`);
+      els.descansoSelo.appendChild(estrelasSelo);
+    }
     const cura = estado.curaDescanso;
     let textoCura = TEXTO.descansoTexto;
     let chipCura = "";
@@ -2144,6 +2201,7 @@
       chipCura = placaStatus("Descanso", "Essência cheia");
     }
     els.descansoTexto.textContent = textoCura;
+    els.descansoStatus.classList.remove("is-escolhido");
     els.descansoTexto.classList.toggle("is-cura", !!cura);
     els.descansoStatus.innerHTML =
       chipCura +
@@ -2160,6 +2218,20 @@
         : TEXTO.proximo;
     els.proximoNome.textContent = proximo.titulo;
     els.proximoNota.textContent = proximo.nota;
+    /* Onda 8: como ler o próximo rival */
+    let dicaRival = document.getElementById("proximo-dica");
+    if (!dicaRival) {
+      dicaRival = document.createElement("p");
+      dicaRival.id = "proximo-dica";
+      dicaRival.className = "proximo-rival__dica";
+      els.proximoNota.insertAdjacentElement("afterend", dicaRival);
+    }
+    const dicaBase = TEXTO.dicaEstilo[proximo.estilo] || "";
+    const dicaTxt = proximo.chefe && proximo.estilo !== "chefe" && dicaBase
+      ? `${dicaBase} Chefe: às vezes esconde a jogada.`
+      : dicaBase;
+    dicaRival.textContent = dicaTxt ? `Dica: ${dicaTxt}` : "";
+    dicaRival.hidden = !dicaTxt;
     els.melhorias.innerHTML = "";
     estado.melhorias.forEach((m) => {
       const btn = document.createElement("button");
@@ -2198,23 +2270,100 @@
     const m = estado.melhorias.find((x) => x.id === id) || melhoriaPorId(id);
     if (!m) return;
     estado.ocupado = true;
+    const antes = fotoStatus(estado.jogador);
     m.aplicar(estado.jogador);
     if (estado.audio) estado.audio.melhorar();
     [...els.melhorias.querySelectorAll(".melhoria")].forEach((btn) => {
       btn.disabled = true;
       btn.classList.toggle("is-escolhida", btn.dataset.melhoria === id);
     });
-    const j = estado.jogador;
-    els.descansoStatus.innerHTML =
-      placaStatus("Vida", `${j.vida}/${j.vidaMax}`) +
-      placaStatus("Essência", `${j.essencia}/${j.essenciaMax}`) +
-      placaStatus("Ataque", `${j.ataque.min}–${j.ataque.max}`) +
-      placaStatus("Magia", `${j.magia.min}–${j.magia.max} · custo ${j.magia.custo}`);
-    await esperar(640);
+    /* Onda 8: o atributo que mudou acende com antes → depois */
+    const depois = fotoStatus(estado.jogador);
+    const base = ["Vida", "Essência", "Ataque", "Magia"];
+    els.descansoStatus.classList.add("is-escolhido");
+    els.descansoStatus.innerHTML = Object.keys(depois)
+      .filter((k) => base.includes(k) || antes[k] !== depois[k])
+      .map((k) => {
+        const mudou = antes[k] !== depois[k];
+        return placaStatus(k, mudou ? `${antes[k]} → ${depois[k]}` : depois[k], mudou);
+      })
+      .join("");
+    await esperar(prefersReduced() ? 700 : 1050);
     estado.melhorias = [];
     iniciarCirculo({ curarJogador: false });
   }
 
+
+  /* ===== Onda 8: intenção do rival (mostrada antes da sua escolha) ===== */
+  function chanceOcultar(rival) {
+    if (!rival || !rival.chefe) return 0;
+    return rival.chefe === "final" ? 0.4 : 0.3;
+  }
+
+  function preverIntencao() {
+    const i = estado.inimigo;
+    if (!i || i.vida <= 0) {
+      estado.intencao = null;
+      pintarIntencao();
+      return;
+    }
+    const acao = escolherAcaoIA();
+    const oculta = estado.rodada > 1 && Math.random() < chanceOcultar(i);
+    estado.intencao = { acao, oculta };
+    pintarIntencao(true);
+  }
+
+  function acaoIntencaoValida() {
+    const it = estado.intencao;
+    const eu = estado.inimigo;
+    if (!it || !eu) return escolherAcaoIA();
+    if (it.acao === "magia" && eu.essencia < eu.magia.custo) return "atacar";
+    return it.acao;
+  }
+
+  function relatoIntencao() {
+    const it = estado.intencao;
+    const i = estado.inimigo;
+    if (!it || !i) return "";
+    if (it.oculta) return TEXTO.intencaoRelato.oculta(i.nome);
+    if (it.acao === "magia") return TEXTO.intencaoRelato.magia(i.nome, i.magia.nome);
+    return TEXTO.intencaoRelato[it.acao](i.nome);
+  }
+
+  function pintarIntencao(nova) {
+    const el = els.intencao;
+    const it = estado.intencao;
+    const i = estado.inimigo;
+    const ameaca = !!(it && !it.oculta && (it.acao === "atacar" || it.acao === "magia"));
+    els.btnDefender.classList.toggle("is-bloqueia", ameaca);
+    els.btnDefender.setAttribute("aria-label", ameaca ? "Defender (bloqueia o golpe do rival)" : "Defender");
+    if (!el) return;
+    if (!it || !i) {
+      el.hidden = true;
+      el.className = "intencao";
+      return;
+    }
+    const tipo = it.oculta ? "oculta" : it.acao;
+    el.className = `intencao intencao--${tipo}${nova && !prefersReduced() ? " is-nova" : ""}`;
+    els.intencaoQuem.textContent = it.oculta ? TEXTO.intencaoOcultaQuem(i.nome) : TEXTO.intencaoQuem(i.nome);
+    els.intencaoAcao.textContent = it.oculta ? TEXTO.intencaoOculta : TEXTO.intencaoAcao[it.acao];
+    el.setAttribute(
+      "aria-label",
+      it.oculta ? `${i.nome} esconde a jogada` : `Intenção do rival: ${TEXTO.intencaoAcao[it.acao]}`
+    );
+    el.hidden = false;
+  }
+
+  function travarIntencao() {
+    if (!els.intencao || els.intencao.hidden) return;
+    els.intencao.classList.add("is-agindo");
+    els.intencao.classList.remove("is-nova");
+  }
+
+  function limparIntencao() {
+    estado.intencao = null;
+    pintarIntencao();
+  }
 
   function textoTelegraph(acao) {
     if (acao === "defender") return TEXTO.rivalPreparaDefender;
@@ -2267,8 +2416,10 @@
     pintarHud();
     void els.txtVez.offsetWidth;
     await esperar(420);
-    const acaoIA = escolherAcaoIA();
+    const acaoIA = acaoIntencaoValida();
+    travarIntencao();
     await telegraphInimigo(acaoIA);
+    limparIntencao();
     await resolverAcao("inimigo", acaoIA);
     const recapInimigo = els.relato.textContent;
     if (algumMorreu()) {
@@ -2284,6 +2435,7 @@
     }
     estado.rodada += 1;
     estado.stats.turnos += 1;
+    preverIntencao();
     els.arena.classList.remove("is-rodada");
     void els.arena.offsetWidth;
     els.arena.classList.add("is-rodada");
@@ -2294,7 +2446,7 @@
     relatar(
       estado.jogador.contra
         ? `${recapInimigo} ${TEXTO.contraPronto}`
-        : `${recapJogador} · ${recapInimigo}`
+        : `${recapJogador} · ${recapInimigo} ${relatoIntencao()}`
     );
     if (estado.audio) estado.audio.turno();
     estado.ocupado = false;
@@ -2377,7 +2529,9 @@
     let maximo = 1;
     if (acao === "defender") {
       const ganho = Math.min(j.essenciaDefesa, j.essenciaMax - j.essencia);
-      texto = TEXTO.previaDefender(ganho, Math.round(j.guardaReducao * 100));
+      const it = estado.intencao;
+      const bloqueia = !!(it && !it.oculta && (it.acao === "atacar" || it.acao === "magia"));
+      texto = TEXTO.previaDefender(ganho, Math.round(j.guardaReducao * 100), bloqueia);
       trilha = document.getElementById("essencia-jogador-meter");
       maximo = j.essenciaMax;
       deMin = j.essencia;

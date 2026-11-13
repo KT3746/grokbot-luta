@@ -4,12 +4,12 @@ Jogo de luta em turnos, original, feito para o navegador. Você controla **Nara*
 
 Jogue online: [https://kt3746.github.io/grokbot-luta/](https://kt3746.github.io/grokbot-luta/)
 
-Versão **1.13.0** - wave 7: **selo Guarda!** quando a defesa segura, **estrelas totais no título** (★ X/30), **Magia quase pronta** (pulsa se um Defender libera o Clarão), **toque para pular o K.O.**. Wave 6: **estrelas da luta** (1 a 3 no K.O.), **estrelas na trilha da campanha**, **números de dano que crescem com o golpe**. Wave 5: **medidor de combo** (encadeie Atacar/Magia sem tomar dano; selo e haptic a partir de ×3); **banner de turno** (Sua vez / Vez do rival) na troca; **ripple de toque** nos botões de ação; **Perigo** com vinheta e chip em vida baixa (≤25%) e selo **Quase!** quando o rival fica a um sopro do K.O.; hit-stop curto em crítico/combo. Wave 4: contra-golpe, prévia ao segurar o botão, leitura do rival, menu Pausa. Wave 3: arena 3D, Magia com carga, Finaliza, K.O.!. Wave 2: meta do dia / sequência, juice de acerto preciso e Clarão. Arena Three.js r160 local; fallback clássico se WebGL falhar. Cache-bust `?v=202611090912`.
+Versão **1.14.0** - onda 8: **intenção do rival** antes da sua escolha (o canto da arena mostra se ele vai atacar, defender ou lançar magia; chefes às vezes escondem), selo **Bloqueia** no Defender quando o golpe vem, **dica do primeiro minuto** que não empurra mais os botões no celular, **Respiro** com estrelas da luta, dica de como ler o próximo rival e o atributo que subiu aceso (antes → depois). Wave 7: **selo Guarda!** quando a defesa segura, **estrelas totais no título** (★ X/30), **Magia quase pronta** (pulsa se um Defender libera o Clarão), **toque para pular o K.O.**. Wave 6: **estrelas da luta** (1 a 3 no K.O.), **estrelas na trilha da campanha**, **números de dano que crescem com o golpe**. Wave 5: **medidor de combo** (encadeie Atacar/Magia sem tomar dano; selo e haptic a partir de ×3); **banner de turno** (Sua vez / Vez do rival) na troca; **ripple de toque** nos botões de ação; **Perigo** com vinheta e chip em vida baixa (≤25%) e selo **Quase!** quando o rival fica a um sopro do K.O.; hit-stop curto em crítico/combo. Wave 4: contra-golpe, prévia ao segurar o botão, leitura do rival, menu Pausa. Wave 3: arena 3D, Magia com carga, Finaliza, K.O.!. Wave 2: meta do dia / sequência, juice de acerto preciso e Clarão. Arena Three.js r160 local; fallback clássico se WebGL falhar. Cache-bust `?v=202611122130`.
 
 ## Como jogar
 
 1. Toque em **Começar campanha** (ou **Continuar** se você já tinha um jogo salvo).
-2. No seu turno, escolha **uma** ação:
+2. Olhe no canto da arena o que o rival **vai fazer** (chefes às vezes escondem). No seu turno, escolha **uma** ação:
    - **Atacar** - dano firme, sem custo. Às vezes sai um acerto preciso.
    - **Defender** - reduz o próximo golpe e recupera um pouco de essência.
    - **Magia (Clarão)** - dano alto, gasta essência e perfura parte da guarda.
